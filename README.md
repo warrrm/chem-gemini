@@ -45,5 +45,5 @@ npm run test:e2e
 
 本项目已配置 `.github/workflows/deploy.yml` 自动化部署工作流（`base: '/chem-gemini/'`）。将代码推送至 GitHub 仓库 `chem-gemini` 的 `main` 分支，并在仓库 **Settings → Pages → Build and deployment → Source** 中选择 **GitHub Actions**，即可自动完成数据校验、单元测试、构建与发布：
 
-- **GitHub 仓库地址**：`https://github.com/<你的GitHub用户名>/chem-gemini`
-- **GitHub Pages 在线链接**：`https://<你的GitHub用户名>.github.io/chem-gemini/`
+- **GitHub 仓库地址**：`https://github.com/warrrm/chem-gemini`
+- **GitHub Pages 在线链接**：`https://warrrm.github.io/chem-gemini/`
