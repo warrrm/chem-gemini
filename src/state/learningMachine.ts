@@ -1,16 +1,22 @@
 import {
+  AppRunMode,
   LearningStep,
   RecognitionResult,
   SampleHotspot,
   SystemStatus,
+  TeacherModeState,
   TextbookEdition,
 } from '../types/chemistry';
 
 export interface LearningState {
+  runMode: AppRunMode;
   edition: TextbookEdition;
+  teacherMode: TeacherModeState;
+
   currentStep: LearningStep;
   systemStatus: SystemStatus;
   statusMessage: string | null;
+  fallbackNotice: string | null;
   guardNotice: string | null;
 
   /** 当前图片来源信息 */
@@ -32,10 +38,17 @@ export interface LearningState {
 }
 
 export const INITIAL_LEARNING_STATE: LearningState = {
+  runMode: 'demo',
   edition: '通用版',
+  teacherMode: {
+    enabled: false,
+    projectorLargeText: false,
+    delayRevealAnswers: true,
+  },
   currentStep: 1,
   systemStatus: 'idle',
   statusMessage: null,
+  fallbackNotice: null,
   guardNotice: null,
   imageSourceType: 'none',
   activeSampleId: null,
@@ -49,14 +62,23 @@ export const INITIAL_LEARNING_STATE: LearningState = {
 };
 
 export type LearningAction =
+  | { type: 'SET_RUN_MODE'; mode: AppRunMode }
   | { type: 'SET_EDITION'; edition: TextbookEdition }
+  | { type: 'UPDATE_TEACHER_MODE'; patch: Partial<TeacherModeState> }
   | { type: 'START_UPLOADING' }
-  | { type: 'START_RECOGNIZING'; sourceType: 'sample' | 'upload' | 'camera'; sampleId?: string; imageUrl?: string; fileName?: string }
+  | {
+      type: 'START_RECOGNIZING';
+      sourceType: 'sample' | 'upload' | 'camera';
+      sampleId?: string;
+      imageUrl?: string;
+      fileName?: string;
+    }
   | { type: 'RECOGNITION_DONE'; result: RecognitionResult }
   | { type: 'SET_ERROR_STATUS'; status: SystemStatus; message: string }
   | { type: 'SELECT_HOTSPOT'; hotspot: SampleHotspot }
   | { type: 'CONFIRM_SUBSTANCE'; substanceId: string }
   | { type: 'FORMULA_VERIFIED_SUCCESS'; substanceId: string }
+  | { type: 'TEACHER_FORCE_UNLOCK'; substanceId: string }
   | { type: 'NAVIGATE_STEP'; step: LearningStep }
   | { type: 'CLEAR_GUARD_NOTICE' }
   | { type: 'RESET_ALL' };
@@ -69,17 +91,31 @@ export function isStepUnlocked(state: LearningState, step: LearningStep): boolea
   if (step === 3) {
     return Boolean(state.confirmedSubstanceId);
   }
-  // Steps 4, 5, 6 strictly require formulaVerified[confirmedSubstanceId] === true
   if (!state.confirmedSubstanceId) return false;
   return state.formulaVerified[state.confirmedSubstanceId] === true;
 }
 
 export function learningReducer(state: LearningState, action: LearningAction): LearningState {
   switch (action.type) {
+    case 'SET_RUN_MODE':
+      return {
+        ...state,
+        runMode: action.mode,
+      };
+
     case 'SET_EDITION':
       return {
         ...state,
         edition: action.edition,
+      };
+
+    case 'UPDATE_TEACHER_MODE':
+      return {
+        ...state,
+        teacherMode: {
+          ...state.teacherMode,
+          ...action.patch,
+        },
       };
 
     case 'START_UPLOADING':
@@ -87,6 +123,7 @@ export function learningReducer(state: LearningState, action: LearningAction): L
         ...state,
         systemStatus: 'uploading',
         statusMessage: '正在读取图片...',
+        fallbackNotice: null,
         guardNotice: null,
       };
 
@@ -96,6 +133,7 @@ export function learningReducer(state: LearningState, action: LearningAction): L
         currentStep: 2,
         systemStatus: 'recognizing',
         statusMessage: '正在识别图片中的化学物质...',
+        fallbackNotice: null,
         guardNotice: null,
         imageSourceType: action.sourceType,
         activeSampleId: action.sampleId ?? null,
@@ -114,6 +152,8 @@ export function learningReducer(state: LearningState, action: LearningAction): L
           ? 'waiting_confirm'
           : action.result.status === 'out_of_scope'
           ? 'no_match'
+          : action.result.status === 'network_error'
+          ? 'network_error'
           : 'unreadable';
 
       return {
@@ -121,6 +161,7 @@ export function learningReducer(state: LearningState, action: LearningAction): L
         currentStep: 2,
         systemStatus: nextStatus,
         statusMessage: action.result.message ?? null,
+        fallbackNotice: action.result.fallbackNotice ?? null,
         recognitionResult: action.result,
         selectedHotspotId: null,
         apparatusNotice: null,
@@ -142,7 +183,8 @@ export function learningReducer(state: LearningState, action: LearningAction): L
         return {
           ...state,
           selectedHotspotId: hs.id,
-          apparatusNotice: hs.apparatusMessage ?? '该对象是实验仪器，不是化学物质，请点选实验药品或材料。',
+          apparatusNotice:
+            hs.apparatusMessage ?? '该对象是实验仪器，不是化学物质，请点选实验药品或材料。',
         };
       }
       return {
@@ -153,6 +195,7 @@ export function learningReducer(state: LearningState, action: LearningAction): L
           status: 'ok',
           candidates: [{ substanceId: hs.substanceId }],
           objects: state.recognitionResult?.objects,
+          providerUsed: state.recognitionResult?.providerUsed,
         },
         systemStatus: 'waiting_confirm',
         statusMessage: null,
@@ -162,7 +205,6 @@ export function learningReducer(state: LearningState, action: LearningAction): L
     }
 
     case 'CONFIRM_SUBSTANCE':
-      // Changing or confirming substance always clears unlock state (Hard Constraint #6)
       return {
         ...state,
         confirmedSubstanceId: action.substanceId,
@@ -175,6 +217,21 @@ export function learningReducer(state: LearningState, action: LearningAction): L
 
     case 'FORMULA_VERIFIED_SUCCESS':
       if (state.confirmedSubstanceId !== action.substanceId) {
+        return state;
+      }
+      return {
+        ...state,
+        formulaVerified: {
+          [action.substanceId]: true,
+        },
+        currentStep: 4,
+        systemStatus: 'idle',
+        statusMessage: null,
+        guardNotice: null,
+      };
+
+    case 'TEACHER_FORCE_UNLOCK':
+      if (!state.teacherMode.enabled || state.confirmedSubstanceId !== action.substanceId) {
         return state;
       }
       return {
@@ -217,7 +274,9 @@ export function learningReducer(state: LearningState, action: LearningAction): L
     case 'RESET_ALL':
       return {
         ...INITIAL_LEARNING_STATE,
+        runMode: state.runMode,
         edition: state.edition,
+        teacherMode: state.teacherMode,
       };
 
     default:

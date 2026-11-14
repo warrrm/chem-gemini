@@ -87,6 +87,7 @@ export interface ReactionEntry {
   priority: number;
   reviewStatus: string;
   arrowNote?: string;
+  editionNote?: string;
 }
 
 export interface McqQuestion {
@@ -99,6 +100,7 @@ export interface McqQuestion {
   options: [string, string, string, string];
   correctIndex: 0 | 1 | 2 | 3;
   optionExplanations: [string, string, string, string];
+  editionNote?: string;
 }
 
 export interface InquirySubQuestion {
@@ -163,12 +165,38 @@ export interface DemoSample {
   hotspots?: SampleHotspot[];
 }
 
+export type AppRunMode = 'demo' | 'online';
+
+export type OnlineProviderMode = 'vision' | 'text_assist';
+
+export type AIProviderPresetId = 'demo' | 'deepseek' | 'opencode_vision' | 'custom';
+
+export interface OnlineAIConfig {
+  enabled: boolean;
+  providerPreset: AIProviderPresetId;
+  providerMode: OnlineProviderMode;
+  baseURL: string;
+  model: string;
+  apiKey: string;
+  imageUploadConsented: boolean;
+}
+
+export interface TeacherModeState {
+  enabled: boolean;
+  projectorLargeText: boolean;
+  delayRevealAnswers: boolean;
+}
+
+export type RecognitionProviderKind = 'demo' | 'local_text' | 'llm_text_assist' | 'vision';
+
 export type RecognitionResult = {
-  status: 'ok' | 'ambiguous' | 'out_of_scope' | 'unreadable';
+  status: 'ok' | 'ambiguous' | 'out_of_scope' | 'unreadable' | 'network_error';
   candidates: { substanceId: string }[];
   objects?: SampleHotspot[];
   message?: string;
   outOfScopeName?: string;
+  providerUsed?: RecognitionProviderKind;
+  fallbackNotice?: string;
 };
 
 export interface RecognitionProvider {

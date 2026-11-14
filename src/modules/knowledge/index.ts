@@ -24,6 +24,7 @@ export interface TextSearchOutcome {
 
 /**
  * 本地名称/别名/俗称模糊匹配（绝不在未解锁前暴露化学式）
+ * 优先匹配初中教材范围内的物质，避免单字（如“水”“酸”）误命中超纲物质全称中的子串（如“乙酰水杨酸”“石炭酸”）。
  */
 export function searchSubstancesByName(rawQuery: string): TextSearchOutcome {
   const q = rawQuery.trim().toLowerCase();
@@ -31,18 +32,7 @@ export function searchSubstancesByName(rawQuery: string): TextSearchOutcome {
     return { type: 'not_found', substances: [] };
   }
 
-  // 1. Check out-of-scope list first
-  const outMatch = OUT_OF_SCOPE_SUBSTANCES.find(
-    (item) =>
-      item.name.toLowerCase().includes(q) ||
-      q.includes(item.name.toLowerCase()) ||
-      item.aliases.some((a) => a.toLowerCase() === q || q.includes(a.toLowerCase()))
-  );
-  if (outMatch) {
-    return { type: 'out_of_scope', substances: [], outOfScope: outMatch };
-  }
-
-  // 2. Exact name or alias match in SUBSTANCES first, then ALL_SUBSTANCES
+  // 1. Exact name or alias match in SUBSTANCES first
   const exactCore = SUBSTANCES.filter(
     (s) =>
       s.name.toLowerCase() === q ||
@@ -50,6 +40,16 @@ export function searchSubstancesByName(rawQuery: string): TextSearchOutcome {
   );
   if (exactCore.length > 0) {
     return { type: 'matched', substances: exactCore };
+  }
+
+  // 2. Exact match in OUT_OF_SCOPE_SUBSTANCES
+  const exactOutMatch = OUT_OF_SCOPE_SUBSTANCES.find(
+    (item) =>
+      item.name.toLowerCase() === q ||
+      item.aliases.some((a) => a.toLowerCase() === q)
+  );
+  if (exactOutMatch) {
+    return { type: 'out_of_scope', substances: [], outOfScope: exactOutMatch };
   }
 
   // 3. Substring fuzzy match in SUBSTANCES
@@ -70,6 +70,17 @@ export function searchSubstancesByName(rawQuery: string): TextSearchOutcome {
   );
   if (auxMatches.length > 0) {
     return { type: 'matched', substances: auxMatches.slice(0, 6) };
+  }
+
+  // 5. Fuzzy match in OUT_OF_SCOPE_SUBSTANCES (require q.length >= 2 for substring match)
+  const fuzzyOutMatch = OUT_OF_SCOPE_SUBSTANCES.find(
+    (item) =>
+      (q.length >= 2 && item.name.toLowerCase().includes(q)) ||
+      q.includes(item.name.toLowerCase()) ||
+      item.aliases.some((a) => (q.length >= 2 && a.toLowerCase().includes(q)) || (a.length >= 2 && q.includes(a.toLowerCase())))
+  );
+  if (fuzzyOutMatch) {
+    return { type: 'out_of_scope', substances: [], outOfScope: fuzzyOutMatch };
   }
 
   return { type: 'not_found', substances: [] };

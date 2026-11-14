@@ -8,7 +8,9 @@ import { MicroDiagramSvg } from './MicroDiagramSvg';
 interface StepFormulaGateProps {
   substance: SubstanceEntry;
   isAlreadyVerified: boolean;
+  teacherModeEnabled?: boolean;
   onVerifiedSuccess: (substanceId: string) => void;
+  onTeacherForceUnlock?: (substanceId: string) => void;
   onContinueToCards: () => void;
 }
 
@@ -17,7 +19,9 @@ const SUBSCRIPT_BUTTONS = ['2', '3', '4', '(', ')'];
 export const StepFormulaGate: React.FC<StepFormulaGateProps> = ({
   substance,
   isAlreadyVerified,
+  teacherModeEnabled = false,
   onVerifiedSuccess,
+  onTeacherForceUnlock,
   onContinueToCards,
 }) => {
   const hasMassRatio = substance.massRatio !== null && substance.massRatio.length > 0;
@@ -206,11 +210,22 @@ export const StepFormulaGate: React.FC<StepFormulaGateProps> = ({
               ? '继续看提示（第 3 级：化合价交叉步骤）'
               : '已展开全部 3 级提示'}
           </button>
-          {isAlreadyVerified && (
-            <button type="button" className="btn-primary btn-sm" onClick={onContinueToCards}>
-              查看已解锁的知识卡片 →
-            </button>
-          )}
+          <div className="action-row">
+            {teacherModeEnabled && !isAlreadyVerified && onTeacherForceUnlock && (
+              <button
+                type="button"
+                className="btn-teacher btn-sm"
+                onClick={() => onTeacherForceUnlock(substance.id)}
+              >
+                教师演示控制：直接解锁展示
+              </button>
+            )}
+            {isAlreadyVerified && (
+              <button type="button" className="btn-primary btn-sm" onClick={onContinueToCards}>
+                查看已解锁的知识卡片 →
+              </button>
+            )}
+          </div>
         </div>
 
         {hintLevel > 0 && (

@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { AIModelPanel } from './components/AIModelPanel';
 import { CameraCaptureModal } from './components/CameraCaptureModal';
+import { OnlineSettingsModal, ThirdPartyConsentModal } from './components/P1Modals';
 import { SampleIllustration } from './components/SampleIllustration';
 import { StepFormulaGate } from './components/StepFormulaGate';
 import {
@@ -10,7 +12,17 @@ import {
 import { DEMO_SAMPLES } from './data/samples';
 import { SUBSTANCES, SUBSTANCE_BY_ID } from './data/substances';
 import { formatFormulaPreview } from './modules/formula/parser';
-import { demoProvider, localTextMatcher } from './modules/recognition';
+import {
+  demoProvider,
+  LLMTextAssistProvider,
+  localTextMatcher,
+  VisionProvider,
+} from './modules/recognition';
+import {
+  getActiveProviderDisplayName,
+  loadOnlineAIConfig,
+  saveOnlineAIConfig,
+} from './modules/recognition/aiConfig';
 import {
   INITIAL_LEARNING_STATE,
   isStepUnlocked,
@@ -19,6 +31,7 @@ import {
 import {
   DemoSample,
   LearningStep,
+  OnlineAIConfig,
   SampleHotspot,
   TextbookEdition,
 } from './types/chemistry';
@@ -34,20 +47,69 @@ const STEPS: { step: LearningStep; shortTitle: string; fullTitle: string }[] = [
 
 const EDITIONS: TextbookEdition[] = ['通用版', '人教版', '沪教版', '鲁教版'];
 
+const DEEPSEEK_EXAMPLE_PROMPTS = [
+  '瓶身标签写着苛性钠，白色片状固体',
+  '灰白色矿石标本，常用于实验室制取二氧化碳',
+  '能使澄清石灰水变浑浊的无色无味气体',
+];
+
 export const App: React.FC = () => {
   const [state, dispatch] = useReducer(learningReducer, INITIAL_LEARNING_STATE);
+  const [aiConfig, setAiConfig] = useState<OnlineAIConfig>(() => loadOnlineAIConfig());
+
   const [cameraOpen, setCameraOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [step2AIPanelOpen, setStep2AIPanelOpen] = useState(false);
 
-  // Manual search state in Step 2 (never exposes formulas)
+  const [pendingConsentUpload, setPendingConsentUpload] = useState<{
+    blob: Blob;
+    fileName: string;
+    sourceType: 'upload' | 'camera';
+  } | null>(null);
+
   const [manualQuery, setManualQuery] = useState('');
   const [manualMatches, setManualMatches] = useState<string[]>([]);
   const [manualFeedback, setManualFeedback] = useState<string | null>(null);
+  const [manualFeedbackType, setManualFeedbackType] = useState<'info' | 'warn'>('warn');
+  const [isSearchingText, setIsSearchingText] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const previousBlobUrlRef = useRef<string | null>(null);
 
-  // Clean up object URLs on change and unmount (Hard Constraint #9)
+  const isOnlineModeActive = aiConfig.enabled && Boolean(aiConfig.apiKey.trim());
+  const activeEngineLabel = getActiveProviderDisplayName(aiConfig);
+  const isDeepSeekActive =
+    isOnlineModeActive &&
+    (aiConfig.providerPreset === 'deepseek' || aiConfig.baseURL.includes('deepseek'));
+
+  useEffect(() => {
+    dispatch({
+      type: 'SET_RUN_MODE',
+      mode: isOnlineModeActive ? 'online' : 'demo',
+    });
+  }, [isOnlineModeActive]);
+
+  useEffect(() => {
+    if (!state.teacherMode.enabled) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!e.altKey) return;
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        const nextStep = Math.min(6, state.currentStep + 1) as LearningStep;
+        dispatch({ type: 'NAVIGATE_STEP', step: nextStep });
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        const prevStep = Math.max(1, state.currentStep - 1) as LearningStep;
+        dispatch({ type: 'NAVIGATE_STEP', step: prevStep });
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [state.teacherMode.enabled, state.currentStep]);
+
   useEffect(() => {
     if (
       previousBlobUrlRef.current &&
@@ -88,6 +150,7 @@ export const App: React.FC = () => {
     setManualQuery('');
     setManualMatches([]);
     setManualFeedback(null);
+    setManualFeedbackType('warn');
   };
 
   const handleSelectSample = async (sample: DemoSample) => {
@@ -101,10 +164,11 @@ export const App: React.FC = () => {
     dispatch({ type: 'RECOGNITION_DONE', result: res });
   };
 
-  const handleProcessBlob = async (
+  const runRecognitionForBlob = async (
     blob: Blob,
     fileName: string,
-    sourceType: 'upload' | 'camera'
+    sourceType: 'upload' | 'camera',
+    useOnlineVision: boolean
   ) => {
     resetManualSearch();
     const objectUrl = URL.createObjectURL(blob);
@@ -114,8 +178,68 @@ export const App: React.FC = () => {
       imageUrl: objectUrl,
       fileName,
     });
+
+    if (useOnlineVision && isOnlineModeActive && aiConfig.providerMode === 'vision') {
+      const vision = new VisionProvider(aiConfig);
+      const res = await vision.recognize({ image: blob });
+      dispatch({ type: 'RECOGNITION_DONE', result: res });
+      return;
+    }
+
+    if (isOnlineModeActive && aiConfig.providerMode === 'text_assist') {
+      dispatch({
+        type: 'RECOGNITION_DONE',
+        result: {
+          status: 'ambiguous',
+          candidates: [],
+          message: `已保存图片预览。当前已启用「${activeEngineLabel}」（文本辅助模式，不会将图片上传给第三方），请在下方输入照片中的标签文字或物质外观描述，点击调用 ${activeEngineLabel} 进行识别。`,
+          providerUsed: 'llm_text_assist',
+        },
+      });
+      return;
+    }
+
     const res = await demoProvider.recognize({ image: blob });
     dispatch({ type: 'RECOGNITION_DONE', result: res });
+  };
+
+  const handleProcessBlob = async (
+    blob: Blob,
+    fileName: string,
+    sourceType: 'upload' | 'camera'
+  ) => {
+    if (
+      isOnlineModeActive &&
+      aiConfig.providerMode === 'vision' &&
+      !aiConfig.imageUploadConsented
+    ) {
+      setPendingConsentUpload({ blob, fileName, sourceType });
+      return;
+    }
+
+    await runRecognitionForBlob(
+      blob,
+      fileName,
+      sourceType,
+      isOnlineModeActive && aiConfig.providerMode === 'vision'
+    );
+  };
+
+  const handleAgreeConsent = async () => {
+    if (!pendingConsentUpload) return;
+    const nextCfg: OnlineAIConfig = { ...aiConfig, imageUploadConsented: true };
+    saveOnlineAIConfig(nextCfg);
+    setAiConfig(nextCfg);
+    const pending = pendingConsentUpload;
+    setPendingConsentUpload(null);
+    await runRecognitionForBlob(pending.blob, pending.fileName, pending.sourceType, true);
+  };
+
+  const handleDeclineConsent = async () => {
+    if (!pendingConsentUpload) return;
+    const pending = pendingConsentUpload;
+    setPendingConsentUpload(null);
+    await runRecognitionForBlob(pending.blob, pending.fileName, pending.sourceType, false);
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -130,22 +254,46 @@ export const App: React.FC = () => {
     fileInputRef.current?.click();
   };
 
-  const handleManualSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const q = manualQuery.trim();
+  const executeTextQuery = async (rawText: string) => {
+    const q = rawText.trim();
     if (!q) {
       setManualMatches([]);
-      setManualFeedback('请输入物质名称或常见俗称，例如“稀盐酸”“氢氧化钠”“石灰石”“水”。');
+      setManualFeedbackType('warn');
+      setManualFeedback('请输入物质名称、俗称或标签文字，例如“稀盐酸”“氢氧化钠”“石灰石”“水”。');
       return;
     }
-    const res = await localTextMatcher.recognize({ text: q });
-    if (res.status === 'ok' && res.candidates.length > 0) {
-      setManualMatches(res.candidates.map((c) => c.substanceId));
-      setManualFeedback(null);
-    } else {
-      setManualMatches([]);
-      setManualFeedback(res.message ?? '暂不在当前学习范围内');
+
+    setIsSearchingText(true);
+    try {
+      const res = isOnlineModeActive
+        ? await new LLMTextAssistProvider(aiConfig).recognize({ text: q })
+        : await localTextMatcher.recognize({ text: q });
+
+      if (res.status === 'ok' && res.candidates.length > 0) {
+        setManualMatches(res.candidates.map((c) => c.substanceId));
+        if (res.fallbackNotice) {
+          setManualFeedbackType(res.fallbackNotice.includes('失败') ? 'warn' : 'info');
+          setManualFeedback(res.fallbackNotice);
+        } else {
+          setManualFeedback(null);
+        }
+      } else {
+        setManualMatches([]);
+        setManualFeedbackType('warn');
+        setManualFeedback(
+          [res.fallbackNotice, res.message ?? '暂不在当前学习范围内']
+            .filter(Boolean)
+            .join(' ')
+        );
+      }
+    } finally {
+      setIsSearchingText(false);
     }
+  };
+
+  const handleManualSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await executeTextQuery(manualQuery);
   };
 
   const handleConfirmSubstance = (substanceId: string) => {
@@ -158,10 +306,10 @@ export const App: React.FC = () => {
 
   const handleResetAll = () => {
     resetManualSearch();
+    setStep2AIPanelOpen(false);
     dispatch({ type: 'RESET_ALL' });
   };
 
-  // Candidate IDs to show in Step 2 (ONLY names rendered, zero formula spoilers)
   const step2CandidateIds = useMemo(() => {
     const ids = new Set<string>();
     state.recognitionResult?.candidates.forEach((c) => ids.add(c.substanceId));
@@ -173,9 +321,18 @@ export const App: React.FC = () => {
     state.imageSourceType !== 'none' &&
     (Boolean(activeSample) || Boolean(state.uploadedImageUrl));
 
+  const shellClasses = [
+    'app-shell',
+    state.teacherMode.enabled ? 'is-teacher-mode' : '',
+    state.teacherMode.enabled && state.teacherMode.projectorLargeText
+      ? 'is-projector-large'
+      : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   return (
-    <div className="app-shell">
-      {/* Hidden file input shared by upload buttons */}
+    <div className={shellClasses}>
       <input
         ref={fileInputRef}
         type="file"
@@ -185,7 +342,6 @@ export const App: React.FC = () => {
         data-testid="image-file-input"
       />
 
-      {/* Top Header */}
       <header className="top-navbar">
         <div className="navbar-inner">
           <div className="brand-block">
@@ -206,12 +362,21 @@ export const App: React.FC = () => {
           </div>
 
           <div className="navbar-controls">
-            <span
-              className="mode-badge is-demo"
-              title="当前为演示模式：内置样例返回预设结果，上传图片仅在本地浏览器内存中预览"
+            <button
+              type="button"
+              className={`mode-badge ${isOnlineModeActive ? 'is-online' : 'is-demo'}`}
+              onClick={() => setSettingsOpen(true)}
+              title="点击切换运行模式（演示模式 / DeepSeek / 多模态）与教师演示设置"
+              data-testid="run-mode-badge"
             >
-              演示模式
-            </span>
+              {isOnlineModeActive ? `在线增强 · ${activeEngineLabel}` : '演示模式'}
+            </button>
+
+            {state.teacherMode.enabled && (
+              <span className="teacher-pill" data-testid="teacher-mode-badge">
+                教师演示中
+              </span>
+            )}
 
             <div className="edition-selector">
               <label htmlFor="edition-select">教材范围：</label>
@@ -235,6 +400,14 @@ export const App: React.FC = () => {
 
             <button
               type="button"
+              className="btn-secondary btn-sm"
+              onClick={() => setSettingsOpen(true)}
+            >
+              设置与教师模式
+            </button>
+
+            <button
+              type="button"
               className="btn-ghost btn-sm"
               onClick={() => setAboutOpen(true)}
             >
@@ -243,13 +416,12 @@ export const App: React.FC = () => {
           </div>
         </div>
 
-        {/* Textbook edition disclaimer bar */}
         <div className="edition-notice-bar">
           版本适配仅供参考，以所用教材为准 · 知识库当前状态：AI 整理，尚未经教师审校
+          {state.teacherMode.enabled && ' · 教师快捷键：Alt + ← / → 切换步骤'}
         </div>
       </header>
 
-      {/* 6-Step Progress Stepper */}
       <nav className="stepper-bar" aria-label="学习步骤导航">
         <ol className="stepper-list">
           {STEPS.map((item) => {
@@ -285,7 +457,6 @@ export const App: React.FC = () => {
         </ol>
       </nav>
 
-      {/* Step Guard Notice Banner */}
       {state.guardNotice && (
         <div className="container">
           <div className="status-banner is-warn guard-banner" role="alert">
@@ -301,13 +472,13 @@ export const App: React.FC = () => {
         </div>
       )}
 
-      {/* Main Content Area */}
       <main className="container main-workspace">
         {state.currentStep === 1 ? (
-          /* ==================== STEP 1: 首页与图片采集 ==================== */
           <div className="home-layout">
             <section className="hero-card">
-              <div className="hero-badge">初中化学互动学习 · 六步闯关识物</div>
+              <div className="hero-badge">
+                初中化学互动学习 · 六步闯关识物 · {activeEngineLabel}
+              </div>
               <h1>从一张照片，认识一种物质</h1>
               <p className="hero-desc">
                 拍照或上传身边的化学试剂、矿石标本或实验器材照片，先辨认物质名称，再通过微观粒子图与元素质量比推导书写化学式，解锁知识卡片、反应方程式与随堂练习。
@@ -331,14 +502,17 @@ export const App: React.FC = () => {
               </div>
 
               <p className="privacy-note">
-                隐私说明：你上传或拍摄的图片仅在当前浏览器会话内存中使用，不上传至任何服务器，不写入本地缓存，刷新或重置后自动销毁。
+                隐私说明：你上传或拍摄的图片仅在当前浏览器会话内存中使用，不写入持久化缓存；在线增强模式支持选择 DeepSeek 或多模态模型，API Key 仅存当前标签页 sessionStorage。
               </p>
             </section>
 
+            {/* 可视化 AI 辅助模型选择与 API 提交面板（直接展示在首页） */}
+            <AIModelPanel config={aiConfig} onSaveConfig={setAiConfig} />
+
             <section className="samples-section" aria-labelledby="samples-heading">
               <div className="section-head">
-                <h2 id="samples-heading">试试内置样例（演示模式一键体验）</h2>
-                <p>覆盖清晰标签溶液、纯净物、无标签未知液体、混合物、多物体识别与超纲物质 5 类典型场景：</p>
+                <h2 id="samples-heading">试试内置样例（一键体验 5 大典型教学场景）</h2>
+                <p>覆盖清晰标签溶液、纯净物、无标签未知液体、混合物、多物体识别与超纲物质：</p>
               </div>
 
               <div className="samples-grid">
@@ -363,9 +537,7 @@ export const App: React.FC = () => {
             </section>
           </div>
         ) : (
-          /* ==================== STEPS 2-6: 桌面左右分栏 / 手机纵向卡片 ==================== */
           <div className="study-two-col">
-            {/* Left Sticky Context Column */}
             <aside className="study-sidebar" aria-label="当前学习对象状态">
               <div className="card sidebar-card">
                 <div className="sidebar-card-head">
@@ -416,7 +588,6 @@ export const App: React.FC = () => {
                   <div className="empty-preview-box">暂无图片</div>
                 )}
 
-                {/* Current Substance Status (Zero Spoiler before formulaVerified!) */}
                 <div className="sidebar-status-box">
                   <div className="sidebar-status-row">
                     <span className="status-label">已确认名称：</span>
@@ -448,9 +619,7 @@ export const App: React.FC = () => {
               </div>
             </aside>
 
-            {/* Right Active Step Panel */}
             <div className="study-main-col">
-              {/* STEP 2: 候选物质与名称确认（仅显示名称，严禁剧透化学式） */}
               {state.currentStep === 2 && (
                 <section className="card step-card" aria-labelledby="step2-title">
                   <div className="step-header-row">
@@ -458,27 +627,94 @@ export const App: React.FC = () => {
                       <span className="step-badge">步骤 2 · 名称辨认</span>
                       <h2 id="step2-title">候选物质与名称确认</h2>
                     </div>
+
+                    <button
+                      type="button"
+                      className="btn-secondary btn-sm"
+                      onClick={() => setStep2AIPanelOpen((v) => !v)}
+                    >
+                      {step2AIPanelOpen
+                        ? '收起模型配置'
+                        : `切换模型 / 配置 API（当前：${activeEngineLabel}）`}
+                    </button>
                   </div>
 
-                  {state.systemStatus === 'recognizing' && (
-                    <div className="status-banner is-info" role="status">
-                      正在识别图片内容，请稍候...
+                  {step2AIPanelOpen && (
+                    <div className="step2-ai-drawer">
+                      <AIModelPanel
+                        config={aiConfig}
+                        onSaveConfig={setAiConfig}
+                        compact
+                      />
                     </div>
                   )}
 
-                  {/* 多物体图片热区点选 */}
-                  {activeSample?.hotspots && activeSample.hotspots.length > 0 && (
+                  {state.systemStatus === 'recognizing' && (
+                    <div className="status-banner is-info" role="status">
+                      正在识别内容，请稍候...
+                    </div>
+                  )}
+
+                  {state.fallbackNotice && (
+                    <div className="status-banner is-info" role="status">
+                      {state.fallbackNotice}
+                    </div>
+                  )}
+
+                  {((activeSample?.hotspots && activeSample.hotspots.length > 0) ||
+                    (state.recognitionResult?.objects &&
+                      state.recognitionResult.objects.length > 0)) && (
                     <div className="multi-object-box">
                       <p className="multi-object-tip">
                         <strong>检测到图片中包含多个物体：</strong>
                         请先在下方图片中点击你要学习的物体（或点击对应热区标签）：
                       </p>
-                      <SampleIllustration
-                        svgKind={activeSample.svgKind}
-                        hotspots={activeSample.hotspots}
-                        selectedHotspotId={state.selectedHotspotId}
-                        onSelectHotspot={handleHotspotClick}
-                      />
+                      {activeSample ? (
+                        <SampleIllustration
+                          svgKind={activeSample.svgKind}
+                          hotspots={activeSample.hotspots}
+                          selectedHotspotId={state.selectedHotspotId}
+                          onSelectHotspot={handleHotspotClick}
+                        />
+                      ) : (
+                        state.uploadedImageUrl &&
+                        state.recognitionResult?.objects && (
+                          <div className="sample-illustration-wrap">
+                            <div className="sample-svg-stage">
+                              <img
+                                src={state.uploadedImageUrl}
+                                alt="多物体识别图像"
+                                className="sample-svg"
+                              />
+                              <div className="hotspot-overlay" aria-label="可点选物体区域">
+                                {state.recognitionResult.objects.map((hs) => {
+                                  const [x, y, w, h] = hs.bbox;
+                                  const isSelected = state.selectedHotspotId === hs.id;
+                                  return (
+                                    <button
+                                      key={hs.id}
+                                      type="button"
+                                      className={`hotspot-box ${isSelected ? 'is-selected' : ''} ${
+                                        hs.isApparatus ? 'is-apparatus' : ''
+                                      }`}
+                                      style={{
+                                        left: `${x}%`,
+                                        top: `${y}%`,
+                                        width: `${w}%`,
+                                        height: `${h}%`,
+                                      }}
+                                      onClick={() => handleHotspotClick(hs)}
+                                    >
+                                      <span className="hotspot-tag">{hs.label}</span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      )}
+
                       {state.apparatusNotice && (
                         <div className="status-banner is-warn" role="alert">
                           {state.apparatusNotice}
@@ -487,12 +723,13 @@ export const App: React.FC = () => {
                     </div>
                   )}
 
-                  {/* 系统状态提示（如无法仅凭外观确定 / 超纲物质 / 演示模式上传提示） */}
                   {state.statusMessage && (
                     <div
                       className={`status-banner ${
                         state.recognitionResult?.status === 'out_of_scope'
                           ? 'is-error'
+                          : isOnlineModeActive
+                          ? 'is-info'
                           : 'is-warn'
                       }`}
                       role="status"
@@ -501,7 +738,6 @@ export const App: React.FC = () => {
                     </div>
                   )}
 
-                  {/* 候选物质按钮列表：严格只显示物质名称！ */}
                   {step2CandidateIds.length > 0 && (
                     <div className="candidates-box">
                       <h3>请选择并确认本次要学习的物质名称：</h3>
@@ -531,26 +767,50 @@ export const App: React.FC = () => {
                     </div>
                   )}
 
-                  {/* 手动输入或搜索物质名称 */}
                   <div className="manual-search-box">
-                    <h3>手动输入或搜索物质名称</h3>
+                    <h3>
+                      {isDeepSeekActive
+                        ? 'DeepSeek 智能标签文字 / 物质描述识别'
+                        : isOnlineModeActive
+                        ? `${activeEngineLabel} 文本辅助识别`
+                        : '手动输入或搜索物质名称'}
+                    </h3>
                     <p className="manual-search-desc">
-                      如果图片无标签、未自动列出候选，或你想学习其他初中化学物质，可在此输入名称或常见俗称（如“稀盐酸”“烧碱”“石灰石”“铁钉”）：
+                      {isDeepSeekActive
+                        ? '请输入照片上的试剂标签文字、常见俗称或物质外观/用途描述，提交后由 DeepSeek 映射到初中化学知识库（仅返回物质名称，不剧透化学式）：'
+                        : '如果图片无标签、未自动列出候选，或你想学习其他初中化学物质，可在此输入名称、常见俗称或标签文字（如“稀盐酸”“烧碱”“石灰石”“铁钉”）：'}
                     </p>
                     <form onSubmit={handleManualSearch} className="manual-search-form">
                       <label htmlFor="manual-substance-input" className="sr-only">
-                        输入物质名称
+                        输入物质名称或描述
                       </label>
                       <input
                         id="manual-substance-input"
                         type="text"
                         value={manualQuery}
                         onChange={(e) => setManualQuery(e.target.value)}
-                        placeholder="输入物质名称或俗称..."
+                        placeholder={
+                          isDeepSeekActive
+                            ? '例如：瓶身写着苛性钠，白色片状固体...'
+                            : '输入物质名称、俗称或标签描述...'
+                        }
                         className="text-input"
                       />
-                      <button type="submit" className="btn-primary">
-                        搜索名称
+                      <button
+                        type="submit"
+                        className="btn-primary"
+                        disabled={isSearchingText}
+                        data-testid="step2-search-submit-btn"
+                      >
+                        {isSearchingText
+                          ? isDeepSeekActive
+                            ? 'DeepSeek 识别中...'
+                            : '正在匹配...'
+                          : isDeepSeekActive
+                          ? '调用 DeepSeek 识别'
+                          : isOnlineModeActive
+                          ? '调用 AI 识别'
+                          : '搜索名称'}
                       </button>
                       <button
                         type="button"
@@ -561,13 +821,38 @@ export const App: React.FC = () => {
                       </button>
                     </form>
 
+                    {isDeepSeekActive && (
+                      <div className="quick-pick-area">
+                        <span className="quick-pick-label">一键填入描述测试 DeepSeek：</span>
+                        <div className="quick-pick-chips">
+                          {DEEPSEEK_EXAMPLE_PROMPTS.map((samplePrompt) => (
+                            <button
+                              key={samplePrompt}
+                              type="button"
+                              className="chip-btn"
+                              onClick={() => {
+                                setManualQuery(samplePrompt);
+                                void executeTextQuery(samplePrompt);
+                              }}
+                            >
+                              {samplePrompt}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     {manualFeedback && (
-                      <div className="status-banner is-warn" role="status">
+                      <div
+                        className={`status-banner ${
+                          manualFeedbackType === 'info' ? 'is-info' : 'is-warn'
+                        }`}
+                        role="status"
+                      >
                         {manualFeedback}
                       </div>
                     )}
 
-                    {/* 常见初中物质快捷点选（仅显示名称，不显示化学式） */}
                     <div className="quick-pick-area">
                       <span className="quick-pick-label">常见初中物质快捷选择：</span>
                       <div className="quick-pick-chips">
@@ -587,13 +872,16 @@ export const App: React.FC = () => {
                 </section>
               )}
 
-              {/* STEP 3: 推导并书写化学式（解锁关卡） */}
               {state.currentStep === 3 && confirmedSubstance && (
                 <StepFormulaGate
                   substance={confirmedSubstance}
                   isAlreadyVerified={isFormulaUnlocked}
+                  teacherModeEnabled={state.teacherMode.enabled}
                   onVerifiedSuccess={(id) =>
                     dispatch({ type: 'FORMULA_VERIFIED_SUCCESS', substanceId: id })
+                  }
+                  onTeacherForceUnlock={(id) =>
+                    dispatch({ type: 'TEACHER_FORCE_UNLOCK', substanceId: id })
                   }
                   onContinueToCards={() =>
                     dispatch({ type: 'NAVIGATE_STEP', step: 4 })
@@ -601,7 +889,6 @@ export const App: React.FC = () => {
                 />
               )}
 
-              {/* STEP 4: 物质知识卡片（解锁后可见） */}
               {state.currentStep === 4 && confirmedSubstance && isFormulaUnlocked && (
                 <StepKnowledgeCard
                   substance={confirmedSubstance}
@@ -609,7 +896,6 @@ export const App: React.FC = () => {
                 />
               )}
 
-              {/* STEP 5: 相关反应方程式（解锁后可见） */}
               {state.currentStep === 5 && confirmedSubstance && isFormulaUnlocked && (
                 <StepReactions
                   substance={confirmedSubstance}
@@ -618,11 +904,13 @@ export const App: React.FC = () => {
                 />
               )}
 
-              {/* STEP 6: 随堂练习与反馈（解锁后可见） */}
               {state.currentStep === 6 && confirmedSubstance && isFormulaUnlocked && (
                 <StepQuizPanel
                   substance={confirmedSubstance}
                   edition={state.edition}
+                  teacherDelayReveal={
+                    state.teacherMode.enabled && state.teacherMode.delayRevealAnswers
+                  }
                   onRestartFlow={handleResetAll}
                 />
               )}
@@ -631,7 +919,6 @@ export const App: React.FC = () => {
         )}
       </main>
 
-      {/* Camera Modal */}
       <CameraCaptureModal
         isOpen={cameraOpen}
         onClose={() => setCameraOpen(false)}
@@ -639,7 +926,25 @@ export const App: React.FC = () => {
         onFallbackUpload={triggerUploadPicker}
       />
 
-      {/* About & Data Review Modal */}
+      <OnlineSettingsModal
+        isOpen={settingsOpen}
+        config={aiConfig}
+        teacherMode={state.teacherMode}
+        onClose={() => setSettingsOpen(false)}
+        onSaveConfig={(next) => setAiConfig(next)}
+        onUpdateTeacherMode={(patch) =>
+          dispatch({ type: 'UPDATE_TEACHER_MODE', patch })
+        }
+      />
+
+      <ThirdPartyConsentModal
+        isOpen={Boolean(pendingConsentUpload)}
+        baseURL={aiConfig.baseURL}
+        model={aiConfig.model}
+        onAgree={handleAgreeConsent}
+        onDecline={handleDeclineConsent}
+      />
+
       {aboutOpen && (
         <div
           className="modal-backdrop"
@@ -668,8 +973,8 @@ export const App: React.FC = () => {
                 本站内置的物质性质、化学方程式与随堂练习题库当前状态为「AI 整理，尚未经教师审校」，出处标注为「通用初中化学基础（知识库自编，未对应具体页码）」，未对应具体纸质教材章节页码；切换教材版本功能目前按标签筛选供教学参考，请以实际使用教材和任课教师讲解为准。
               </p>
               <p>
-                <strong>隐私保护承诺：</strong>
-                当前为纯前端演示模式，你上传或拍摄的照片仅保存在当前浏览器页面内存中，不会上传至任何服务器，也不会写入本地持久化存储。
+                <strong>隐私与 API Key 安全承诺：</strong>
+                用户拍摄或上传的照片仅保存在当前浏览器页面内存中（URL.createObjectURL）；如启用 DeepSeek 或其他在线模型，所填 API Key 仅保存在当前标签页的 sessionStorage 中，绝不写入代码或持久化存储。
               </p>
             </div>
           </div>

@@ -256,6 +256,12 @@ export const StepReactions: React.FC<StepReactionsProps> = ({
                   <strong>核心知识点：</strong>
                   <span>{rxn.knowledgePoint}</span>
                 </div>
+                {rxn.editionNote && (
+                  <div className="edition-note-inline">
+                    <strong>教材版本教学提示：</strong>
+                    <span>{rxn.editionNote}</span>
+                  </div>
+                )}
               </div>
 
               <div className="reaction-source-line">
@@ -280,6 +286,7 @@ export const StepReactions: React.FC<StepReactionsProps> = ({
 interface StepQuizPanelProps {
   substance: SubstanceEntry;
   edition: TextbookEdition;
+  teacherDelayReveal?: boolean;
   onRestartFlow: () => void;
 }
 
@@ -288,6 +295,7 @@ const OPTION_LETTERS = ['A', 'B', 'C', 'D'];
 export const StepQuizPanel: React.FC<StepQuizPanelProps> = ({
   substance,
   edition,
+  teacherDelayReveal = false,
   onRestartFlow,
 }) => {
   const mcqPool = useMemo(
@@ -306,10 +314,12 @@ export const StepQuizPanel: React.FC<StepQuizPanelProps> = ({
   // MCQ answer state
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [mcqSubmitted, setMcqSubmitted] = useState(false);
+  const [mcqExplanationRevealed, setMcqExplanationRevealed] = useState(false);
 
   // Inquiry answer state
   const [inquiryAnswers, setInquiryAnswers] = useState<string[]>([]);
   const [inquirySubmitted, setInquirySubmitted] = useState(false);
+  const [inquiryAnswerRevealed, setInquiryAnswerRevealed] = useState(false);
 
   useEffect(() => {
     setQuizMode('mcq');
@@ -319,8 +329,10 @@ export const StepQuizPanel: React.FC<StepQuizPanelProps> = ({
     setCurrentInquiry(firstInq);
     setSelectedOption(null);
     setMcqSubmitted(false);
+    setMcqExplanationRevealed(false);
     setInquiryAnswers(firstInq ? firstInq.subQuestions.map(() => '') : []);
     setInquirySubmitted(false);
+    setInquiryAnswerRevealed(false);
   }, [substance.id, edition, mcqPool, inquiryPool]);
 
   const handleSwitchQuestion = () => {
@@ -329,11 +341,13 @@ export const StepQuizPanel: React.FC<StepQuizPanelProps> = ({
       setCurrentMcq(next);
       setSelectedOption(null);
       setMcqSubmitted(false);
+      setMcqExplanationRevealed(false);
     } else {
       const next = pickNextQuestion(inquiryPool, currentInquiry?.id);
       setCurrentInquiry(next);
       setInquiryAnswers(next ? next.subQuestions.map(() => '') : []);
       setInquirySubmitted(false);
+      setInquiryAnswerRevealed(false);
     }
   };
 
@@ -400,8 +414,9 @@ export const StepQuizPanel: React.FC<StepQuizPanelProps> = ({
                 {currentMcq.options.map((optText, idx) => {
                   const isChosen = selectedOption === idx;
                   const isCorrect = idx === currentMcq.correctIndex;
+                  const showMcqAnswerNow = mcqSubmitted && (!teacherDelayReveal || mcqExplanationRevealed);
                   let stateClass = '';
-                  if (mcqSubmitted) {
+                  if (showMcqAnswerNow) {
                     if (isCorrect) stateClass = 'is-correct';
                     else if (isChosen && !isCorrect) stateClass = 'is-wrong';
                   } else if (isChosen) {
@@ -431,7 +446,12 @@ export const StepQuizPanel: React.FC<StepQuizPanelProps> = ({
                     type="button"
                     className="btn-primary"
                     disabled={selectedOption === null}
-                    onClick={() => setMcqSubmitted(true)}
+                    onClick={() => {
+                      setMcqSubmitted(true);
+                      if (!teacherDelayReveal) {
+                        setMcqExplanationRevealed(true);
+                      }
+                    }}
                   >
                     提交答案
                   </button>
@@ -450,20 +470,33 @@ export const StepQuizPanel: React.FC<StepQuizPanelProps> = ({
                         }，正确答案是 ${OPTION_LETTERS[currentMcq.correctIndex]}。`}
                   </div>
 
-                  <div className="explanations-list">
-                    <h4>逐项解析：</h4>
-                    {currentMcq.optionExplanations.map((exp, idx) => (
-                      <div
-                        key={idx}
-                        className={`exp-item ${
-                          idx === currentMcq.correctIndex ? 'is-right-exp' : ''
-                        }`}
+                  {!mcqExplanationRevealed ? (
+                    <div className="teacher-delay-bar">
+                      <span>教师演示模式已开启答案延迟揭晓，可先组织课堂讨论后再展开详解：</span>
+                      <button
+                        type="button"
+                        className="btn-teacher btn-sm"
+                        onClick={() => setMcqExplanationRevealed(true)}
                       >
-                        <strong>选项 {OPTION_LETTERS[idx]}：</strong>
-                        <span>{exp}</span>
-                      </div>
-                    ))}
-                  </div>
+                        揭晓逐项解析
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="explanations-list">
+                      <h4>逐项解析：</h4>
+                      {currentMcq.optionExplanations.map((exp, idx) => (
+                        <div
+                          key={idx}
+                          className={`exp-item ${
+                            idx === currentMcq.correctIndex ? 'is-right-exp' : ''
+                          }`}
+                        >
+                          <strong>选项 {OPTION_LETTERS[idx]}：</strong>
+                          <span>{exp}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </>
@@ -507,7 +540,7 @@ export const StepQuizPanel: React.FC<StepQuizPanelProps> = ({
                   }}
                 />
 
-                {inquirySubmitted && (
+                {inquirySubmitted && inquiryAnswerRevealed && (
                   <div className="subq-answer-reveal" data-testid={`inquiry-reveal-${idx}`}>
                     <div className="reveal-row">
                       <strong>参考答案：</strong>
@@ -527,16 +560,34 @@ export const StepQuizPanel: React.FC<StepQuizPanelProps> = ({
             ))}
           </div>
 
-          {!inquirySubmitted && (
+          {!inquirySubmitted ? (
             <div className="action-row">
               <button
                 type="button"
                 className="btn-primary"
-                onClick={() => setInquirySubmitted(true)}
+                onClick={() => {
+                  setInquirySubmitted(true);
+                  if (!teacherDelayReveal) {
+                    setInquiryAnswerRevealed(true);
+                  }
+                }}
               >
                 提交作答并查看参考答案
               </button>
             </div>
+          ) : (
+            !inquiryAnswerRevealed && (
+              <div className="teacher-delay-bar">
+                <span>已记录作答内容，教师讲解后可点击揭晓参考答案与评分要点：</span>
+                <button
+                  type="button"
+                  className="btn-teacher btn-sm"
+                  onClick={() => setInquiryAnswerRevealed(true)}
+                >
+                  揭晓参考答案与评分要点
+                </button>
+              </div>
+            )
           )}
         </div>
       )}

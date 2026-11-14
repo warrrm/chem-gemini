@@ -7,6 +7,7 @@ export const REACTIONS: ReactionEntry[] = [
   // 1. 过氧化氢分解制氧气
   {
     id: 'rxn_h2o2_decomp',
+    editionNote: '人教版/沪教版/鲁教版均作为实验室制氧核心实验；部分版本重点对比二氧化锰催化前后质量不变',
     name: '实验室用过氧化氢制取氧气',
     reactants: [{ substanceId: 'h2o2', coef: 2 }],
     products: [
@@ -24,6 +25,7 @@ export const REACTIONS: ReactionEntry[] = [
   // 2. 高锰酸钾加热分解制氧气
   {
     id: 'rxn_kmno4_decomp',
+    editionNote: '人教版重点强调试管口放一团棉花；沪教版侧重热分解与固体质量差分析',
     name: '实验室加热高锰酸钾制取氧气',
     reactants: [{ substanceId: 'kmno4', coef: 2 }],
     products: [
@@ -42,6 +44,7 @@ export const REACTIONS: ReactionEntry[] = [
   // 3. 电解水
   {
     id: 'rxn_h2o_electrolysis',
+    editionNote: '各版本均以“正氧负氢、体积比 1:2”推导水由氢、氧元素组成',
     name: '水的电解实验',
     reactants: [{ substanceId: 'h2o', coef: 2 }],
     products: [
@@ -161,6 +164,7 @@ export const REACTIONS: ReactionEntry[] = [
   // 10. 实验室制取二氧化碳（碳酸钙与稀盐酸）
   {
     id: 'rxn_caco3_hcl',
+    editionNote: '各版本均将其作为实验室制取二氧化碳的标准反应，并对比为何不用稀硫酸或浓盐酸',
     name: '实验室用石灰石（或大理石）与稀盐酸制取二氧化碳',
     reactants: [
       { substanceId: 'caco3', coef: 1 },
@@ -182,6 +186,7 @@ export const REACTIONS: ReactionEntry[] = [
   // 11. 检验二氧化碳（二氧化碳与澄清石灰水反应）
   {
     id: 'rxn_co2_caoh2',
+    editionNote: '各版本均将其作为检验二氧化碳的特征反应',
     name: '用澄清石灰水检验二氧化碳',
     reactants: [
       { substanceId: 'co2', coef: 1 },
@@ -290,6 +295,7 @@ export const REACTIONS: ReactionEntry[] = [
   // 17. 氢氧化钠与稀盐酸中和反应
   {
     id: 'rxn_naoh_hcl',
+    editionNote: '人教版/鲁教版借助酚酞指示剂演示中和反应；沪教版常结合 pH 传感器曲线讲解',
     name: '氢氧化钠与稀盐酸的中和反应',
     reactants: [
       { substanceId: 'naoh', coef: 1 },
@@ -350,6 +356,7 @@ export const REACTIONS: ReactionEntry[] = [
   // 20. 铁与硫酸铜溶液置换反应
   {
     id: 'rxn_fe_cuso4',
+    editionNote: '人教版/鲁教版用于验证质量守恒定律与金属活动性；沪教版侧重湿法炼铜历史文化拓展',
     name: '铁与硫酸铜溶液的置换反应（湿法炼铜原理）',
     reactants: [
       { substanceId: 'fe', coef: 1 },
@@ -681,6 +688,92 @@ export const REACTIONS: ReactionEntry[] = [
     editions: ['通用版', '人教版', '沪教版', '鲁教版'],
     source: DEFAULT_SOURCE,
     priority: 87,
+    reviewStatus: DEFAULT_REVIEW,
+  },
+
+  // 37. 铜与硝酸银溶液置换反应（金属活动性顺序核心实验）
+  {
+    id: 'rxn_cu_agno3',
+    name: '铜与硝酸银溶液的置换反应',
+    editionNote: '人教版/沪教版/鲁教版验证“铜的活动性强于银”的经典对比实验',
+    reactants: [
+      { substanceId: 'cu', coef: 1 },
+      { substanceId: 'agno3', coef: 2 },
+    ],
+    products: [
+      { substanceId: 'cuno32', coef: 1 },
+      { substanceId: 'ag', coef: 2 },
+    ],
+    condition: '常温',
+    phenomenon: '常温下将紫红色铜丝浸入无色硝酸银溶液中，铜丝表面有银白色固体析出，溶液由无色逐渐变为蓝色。',
+    knowledgePoint: '金属活动性顺序（Cu > Ag）及盐溶液颜色变化规律',
+    editions: ['通用版', '人教版', '沪教版', '鲁教版'],
+    source: DEFAULT_SOURCE,
+    priority: 94,
+    reviewStatus: DEFAULT_REVIEW,
+    arrowNote: '置换出的银附着在铜丝表面，初中方程式通常不标 ↓',
+  },
+  // 38. 镁与稀盐酸反应（金属与酸反应速率对比）
+  {
+    id: 'rxn_mg_hcl',
+    name: '镁条与稀盐酸反应',
+    editionNote: '人教版/鲁教版用于对比镁、锌、铁与酸反应的剧烈程度及放热现象',
+    reactants: [
+      { substanceId: 'mg', coef: 1 },
+      { substanceId: 'hcl', coef: 2 },
+    ],
+    products: [
+      { substanceId: 'mgcl2', coef: 1 },
+      { substanceId: 'h2', coef: 1, mark: '↑' },
+    ],
+    condition: '常温',
+    phenomenon: '常温下镁条与稀盐酸剧烈反应，迅速产生大量无色气泡，试管外壁明显发烫，镁条很快溶解。',
+    knowledgePoint: '金属活动性顺序与化学反应中的能量变化（放热反应）',
+    editions: ['通用版', '人教版', '鲁教版'],
+    source: DEFAULT_SOURCE,
+    priority: 91,
+    reviewStatus: DEFAULT_REVIEW,
+  },
+  // 39. 氧化钙与稀盐酸反应（金属氧化物与酸反应拓展）
+  {
+    id: 'rxn_cao_hcl',
+    name: '氧化钙与稀盐酸反应',
+    editionNote: '沪教版/鲁教版在酸的通性中重点强化金属氧化物与酸生成盐和水的规律',
+    reactants: [
+      { substanceId: 'cao', coef: 1 },
+      { substanceId: 'hcl', coef: 2 },
+    ],
+    products: [
+      { substanceId: 'cacl2', coef: 1 },
+      { substanceId: 'h2o', coef: 1 },
+    ],
+    condition: '常温',
+    phenomenon: '常温下白色氧化钙固体与稀盐酸反应溶解，放出热量，得到无色澄清的氯化钙溶液。',
+    knowledgePoint: '碱性氧化物（金属氧化物）与酸反应生成盐和水',
+    editions: ['通用版', '沪教版', '鲁教版'],
+    source: DEFAULT_SOURCE,
+    priority: 86,
+    reviewStatus: DEFAULT_REVIEW,
+  },
+  // 40. 氯化铜溶液与氢氧化钠溶液反应
+  {
+    id: 'rxn_cucl2_naoh',
+    name: '氯化铜溶液与氢氧化钠溶液反应',
+    editionNote: '沪教版/人教版复分解反应沉淀生成规律典型例证',
+    reactants: [
+      { substanceId: 'cucl2', coef: 1 },
+      { substanceId: 'naoh', coef: 2 },
+    ],
+    products: [
+      { substanceId: 'cuoh2', coef: 1, mark: '↓' },
+      { substanceId: 'nacl', coef: 2 },
+    ],
+    condition: '常温',
+    phenomenon: '常温下向蓝色氯化铜溶液中滴加无色氢氧化钠溶液，立即产生蓝色絮状沉淀。',
+    knowledgePoint: '复分解反应发生的条件（生成难溶性碱沉淀）',
+    editions: ['通用版', '人教版', '沪教版'],
+    source: DEFAULT_SOURCE,
+    priority: 84,
     reviewStatus: DEFAULT_REVIEW,
   },
 ];
