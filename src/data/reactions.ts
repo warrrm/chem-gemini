@@ -1,0 +1,686 @@
+import { ReactionEntry } from '../types/chemistry';
+
+const DEFAULT_SOURCE = '通用初中化学基础（知识库自编，未对应具体页码）';
+const DEFAULT_REVIEW = 'AI 整理，尚未经教师审校';
+
+export const REACTIONS: ReactionEntry[] = [
+  // 1. 过氧化氢分解制氧气
+  {
+    id: 'rxn_h2o2_decomp',
+    name: '实验室用过氧化氢制取氧气',
+    reactants: [{ substanceId: 'h2o2', coef: 2 }],
+    products: [
+      { substanceId: 'h2o', coef: 2 },
+      { substanceId: 'o2', coef: 1, mark: '↑' },
+    ],
+    condition: 'MnO2',
+    phenomenon: '向过氧化氢溶液中加入少量黑色二氧化锰粉末后，迅速产生大量无色气泡，该气体能使带火星的木条复燃。',
+    knowledgePoint: '催化剂概念与实验室常温制取氧气的原理',
+    editions: ['通用版', '人教版', '沪教版', '鲁教版'],
+    source: DEFAULT_SOURCE,
+    priority: 100,
+    reviewStatus: DEFAULT_REVIEW,
+  },
+  // 2. 高锰酸钾加热分解制氧气
+  {
+    id: 'rxn_kmno4_decomp',
+    name: '实验室加热高锰酸钾制取氧气',
+    reactants: [{ substanceId: 'kmno4', coef: 2 }],
+    products: [
+      { substanceId: 'k2mno4', coef: 1 },
+      { substanceId: 'mno2', coef: 1 },
+      { substanceId: 'o2', coef: 1, mark: '↑' },
+    ],
+    condition: '加热',
+    phenomenon: '暗紫色固体受热分解，产生能使带火星木条复燃的无色气体，试管内剩余固体呈墨绿色与黑色混合状。',
+    knowledgePoint: '固体加热型制氧原理及分解反应特征（一变多）',
+    editions: ['通用版', '人教版', '沪教版', '鲁教版'],
+    source: DEFAULT_SOURCE,
+    priority: 98,
+    reviewStatus: DEFAULT_REVIEW,
+  },
+  // 3. 电解水
+  {
+    id: 'rxn_h2o_electrolysis',
+    name: '水的电解实验',
+    reactants: [{ substanceId: 'h2o', coef: 2 }],
+    products: [
+      { substanceId: 'h2', coef: 2, mark: '↑' },
+      { substanceId: 'o2', coef: 1, mark: '↑' },
+    ],
+    condition: '通电',
+    phenomenon: '两个电极表面均有无色气泡产生，连接电源负极与正极的玻璃管内收集到的气体体积比约为 2 : 1。',
+    knowledgePoint: '证明水是由氢元素和氧元素组成的化合物',
+    editions: ['通用版', '人教版', '沪教版', '鲁教版'],
+    source: DEFAULT_SOURCE,
+    priority: 97,
+    reviewStatus: DEFAULT_REVIEW,
+  },
+  // 4. 铁在氧气中燃烧
+  {
+    id: 'rxn_fe_o2_burn',
+    name: '铁丝在纯氧中剧烈燃烧',
+    reactants: [
+      { substanceId: 'fe', coef: 3 },
+      { substanceId: 'o2', coef: 2 },
+    ],
+    products: [{ substanceId: 'fe3o4', coef: 1 }],
+    condition: '点燃',
+    phenomenon: '铁丝在氧气中剧烈燃烧，火星四射，放出大量的热，生成一种黑色固体。',
+    knowledgePoint: '氧气的助燃性及集气瓶底预先放少量水或细沙的实验安全规范',
+    editions: ['通用版', '人教版', '沪教版', '鲁教版'],
+    source: DEFAULT_SOURCE,
+    priority: 96,
+    reviewStatus: DEFAULT_REVIEW,
+  },
+  // 5. 木炭充分燃烧
+  {
+    id: 'rxn_c_o2_full',
+    name: '木炭在氧气中充分燃烧',
+    reactants: [
+      { substanceId: 'c', coef: 1 },
+      { substanceId: 'o2', coef: 1 },
+    ],
+    products: [{ substanceId: 'co2', coef: 1 }],
+    condition: '点燃',
+    phenomenon: '在氧气中剧烈燃烧，发出白光，放出热量，生成的无色气体能使澄清石灰水变浑浊。',
+    knowledgePoint: '碳的可燃性（氧气充足时完全燃烧）',
+    editions: ['通用版', '人教版', '沪教版', '鲁教版'],
+    source: DEFAULT_SOURCE,
+    priority: 95,
+    reviewStatus: DEFAULT_REVIEW,
+  },
+  // 6. 木炭不充分燃烧
+  {
+    id: 'rxn_c_o2_incomplete',
+    name: '碳在氧气不充足时燃烧',
+    reactants: [
+      { substanceId: 'c', coef: 2 },
+      { substanceId: 'o2', coef: 1 },
+    ],
+    products: [{ substanceId: 'co', coef: 2 }],
+    condition: '点燃',
+    phenomenon: '碳在氧气不足的条件下燃烧放出热量，生成无色、无味的有毒气体一氧化碳。',
+    knowledgePoint: '反应物用量（氧气是否充足）对生成物种类的影响',
+    editions: ['通用版', '人教版', '沪教版', '鲁教版'],
+    source: DEFAULT_SOURCE,
+    priority: 85,
+    reviewStatus: DEFAULT_REVIEW,
+  },
+  // 7. 硫在氧气中燃烧
+  {
+    id: 'rxn_s_o2_burn',
+    name: '硫在氧气中燃烧',
+    reactants: [
+      { substanceId: 's', coef: 1 },
+      { substanceId: 'o2', coef: 1 },
+    ],
+    products: [{ substanceId: 'so2', coef: 1 }],
+    condition: '点燃',
+    phenomenon: '在空气中燃烧发出微弱的淡蓝色火焰，在纯氧中燃烧发出明亮的蓝紫色火焰，放出热量，生成有刺激性气味的气体。',
+    knowledgePoint: '非金属单质与氧气的化合反应及尾气吸收环保意识',
+    editions: ['通用版', '人教版', '沪教版', '鲁教版'],
+    source: DEFAULT_SOURCE,
+    priority: 92,
+    reviewStatus: DEFAULT_REVIEW,
+  },
+  // 8. 镁条燃烧
+  {
+    id: 'rxn_mg_o2_burn',
+    name: '镁条在空气中燃烧',
+    reactants: [
+      { substanceId: 'mg', coef: 2 },
+      { substanceId: 'o2', coef: 1 },
+    ],
+    products: [{ substanceId: 'mgo', coef: 2 }],
+    condition: '点燃',
+    phenomenon: '剧烈燃烧，发出耀眼的白光，放出大量的热，生成一种白色粉末状固体。',
+    knowledgePoint: '金属镁的活泼性及质量守恒定律验证实验中的密闭要求',
+    editions: ['通用版', '人教版', '沪教版', '鲁教版'],
+    source: DEFAULT_SOURCE,
+    priority: 94,
+    reviewStatus: DEFAULT_REVIEW,
+  },
+  // 9. 氢气燃烧
+  {
+    id: 'rxn_h2_o2_burn',
+    name: '氢气在空气中燃烧',
+    reactants: [
+      { substanceId: 'h2', coef: 2 },
+      { substanceId: 'o2', coef: 1 },
+    ],
+    products: [{ substanceId: 'h2o', coef: 2 }],
+    condition: '点燃',
+    phenomenon: '纯净的氢气在空气中安静地燃烧，产生淡蓝色火焰，放出热量，罩在火焰上方的干冷烧杯内壁出现水雾。',
+    knowledgePoint: '氢气的可燃性、清洁能源特性及点燃气体验纯安全规范',
+    editions: ['通用版', '人教版', '沪教版', '鲁教版'],
+    source: DEFAULT_SOURCE,
+    priority: 93,
+    reviewStatus: DEFAULT_REVIEW,
+  },
+  // 10. 实验室制取二氧化碳（碳酸钙与稀盐酸）
+  {
+    id: 'rxn_caco3_hcl',
+    name: '实验室用石灰石（或大理石）与稀盐酸制取二氧化碳',
+    reactants: [
+      { substanceId: 'caco3', coef: 1 },
+      { substanceId: 'hcl', coef: 2 },
+    ],
+    products: [
+      { substanceId: 'cacl2', coef: 1 },
+      { substanceId: 'h2o', coef: 1 },
+      { substanceId: 'co2', coef: 1, mark: '↑' },
+    ],
+    condition: '常温',
+    phenomenon: '常温下块状固体表面不断产生大量无色气泡，固体逐渐溶解减小，生成的气体能使澄清石灰水变浑浊。',
+    knowledgePoint: '实验室制取二氧化碳的反应原理及碳酸盐与酸的反应',
+    editions: ['通用版', '人教版', '沪教版', '鲁教版'],
+    source: DEFAULT_SOURCE,
+    priority: 100,
+    reviewStatus: DEFAULT_REVIEW,
+  },
+  // 11. 检验二氧化碳（二氧化碳与澄清石灰水反应）
+  {
+    id: 'rxn_co2_caoh2',
+    name: '用澄清石灰水检验二氧化碳',
+    reactants: [
+      { substanceId: 'co2', coef: 1 },
+      { substanceId: 'caoh2', coef: 1 },
+    ],
+    products: [
+      { substanceId: 'caco3', coef: 1, mark: '↓' },
+      { substanceId: 'h2o', coef: 1 },
+    ],
+    condition: '常温',
+    phenomenon: '常温下将气体通入无色澄清石灰水中，澄清石灰水逐渐变浑浊（生成白色沉淀）。',
+    knowledgePoint: '二氧化碳的特征检验方法及碱与非金属氧化物的反应',
+    editions: ['通用版', '人教版', '沪教版', '鲁教版'],
+    source: DEFAULT_SOURCE,
+    priority: 99,
+    reviewStatus: DEFAULT_REVIEW,
+  },
+  // 12. 二氧化碳与水反应生成碳酸
+  {
+    id: 'rxn_co2_h2o',
+    name: '二氧化碳溶于水并与水化合',
+    reactants: [
+      { substanceId: 'co2', coef: 1 },
+      { substanceId: 'h2o', coef: 1 },
+    ],
+    products: [{ substanceId: 'h2co3', coef: 1 }],
+    condition: '常温',
+    phenomenon: '常温下将二氧化碳通入紫色石蕊溶液中，紫色石蕊溶液变为红色。',
+    knowledgePoint: '酸性氧化物与水反应生成酸（是生成的碳酸使石蕊变红）',
+    editions: ['通用版', '人教版', '沪教版', '鲁教版'],
+    source: DEFAULT_SOURCE,
+    priority: 90,
+    reviewStatus: DEFAULT_REVIEW,
+  },
+  // 13. 碳酸受热分解
+  {
+    id: 'rxn_h2co3_decomp',
+    name: '碳酸不稳定分解',
+    reactants: [{ substanceId: 'h2co3', coef: 1 }],
+    products: [
+      { substanceId: 'h2o', coef: 1 },
+      { substanceId: 'co2', coef: 1, mark: '↑' },
+    ],
+    condition: '加热',
+    phenomenon: '将通入二氧化碳变红的石蕊溶液加热后，有气泡逸出，溶液由红色重新变回紫色。',
+    knowledgePoint: '碳酸的不稳定性及可逆实验现象对比',
+    editions: ['通用版', '人教版', '沪教版', '鲁教版'],
+    source: DEFAULT_SOURCE,
+    priority: 82,
+    reviewStatus: DEFAULT_REVIEW,
+  },
+  // 14. 工业高温煅烧石灰石
+  {
+    id: 'rxn_caco3_calcine',
+    name: '工业高温煅烧石灰石制生石灰',
+    reactants: [{ substanceId: 'caco3', coef: 1 }],
+    products: [
+      { substanceId: 'cao', coef: 1 },
+      { substanceId: 'co2', coef: 1, mark: '↑' },
+    ],
+    condition: '高温',
+    phenomenon: '在高温持续煅烧下，石灰石分解生成白色块状生石灰，并放出大量二氧化碳气体。',
+    knowledgePoint: '工业制取氧化钙（生石灰）和二氧化碳的原理',
+    editions: ['通用版', '人教版', '沪教版', '鲁教版'],
+    source: DEFAULT_SOURCE,
+    priority: 94,
+    reviewStatus: DEFAULT_REVIEW,
+  },
+  // 15. 生石灰与水反应制熟石灰
+  {
+    id: 'rxn_cao_h2o',
+    name: '生石灰与水化合制取熟石灰',
+    reactants: [
+      { substanceId: 'cao', coef: 1 },
+      { substanceId: 'h2o', coef: 1 },
+    ],
+    products: [{ substanceId: 'caoh2', coef: 1 }],
+    condition: '常温',
+    phenomenon: '常温下白色块状生石灰遇水迅速碎裂成白色粉末，同时放出大量的热，使水沸腾产生大量水蒸气。',
+    knowledgePoint: '氧化钙的吸水性、放热化合反应及“三石灰”转化关系',
+    editions: ['通用版', '人教版', '沪教版', '鲁教版'],
+    source: DEFAULT_SOURCE,
+    priority: 97,
+    reviewStatus: DEFAULT_REVIEW,
+  },
+  // 16. 氢氧化钠吸收二氧化碳（变质原因）
+  {
+    id: 'rxn_naoh_co2',
+    name: '氢氧化钠溶液吸收二氧化碳（敞口放置变质原理）',
+    reactants: [
+      { substanceId: 'naoh', coef: 2 },
+      { substanceId: 'co2', coef: 1 },
+    ],
+    products: [
+      { substanceId: 'na2co3', coef: 1 },
+      { substanceId: 'h2o', coef: 1 },
+    ],
+    condition: '常温',
+    phenomenon: '常温下无明显肉眼可见沉淀，但密封软塑料瓶盛满二氧化碳并注入氢氧化钠溶液振荡后，瓶身会明显变瘪。',
+    knowledgePoint: '碱与非金属氧化物的反应、氢氧化钠密封保存的原因及吸收二氧化碳的试剂选择',
+    editions: ['通用版', '人教版', '沪教版', '鲁教版'],
+    source: DEFAULT_SOURCE,
+    priority: 96,
+    reviewStatus: DEFAULT_REVIEW,
+  },
+  // 17. 氢氧化钠与稀盐酸中和反应
+  {
+    id: 'rxn_naoh_hcl',
+    name: '氢氧化钠与稀盐酸的中和反应',
+    reactants: [
+      { substanceId: 'naoh', coef: 1 },
+      { substanceId: 'hcl', coef: 1 },
+    ],
+    products: [
+      { substanceId: 'nacl', coef: 1 },
+      { substanceId: 'h2o', coef: 1 },
+    ],
+    condition: '常温',
+    phenomenon: '常温下向滴有酚酞的红色氢氧化钠溶液中逐滴滴加稀盐酸，溶液由红色逐渐变为无色，同时放出热量。',
+    knowledgePoint: '酸与碱的中和反应及指示剂在无明显现象反应中的应用',
+    editions: ['通用版', '人教版', '沪教版', '鲁教版'],
+    source: DEFAULT_SOURCE,
+    priority: 98,
+    reviewStatus: DEFAULT_REVIEW,
+  },
+  // 18. 氢氧化钠与稀硫酸中和反应
+  {
+    id: 'rxn_naoh_h2so4',
+    name: '氢氧化钠与稀硫酸的中和反应',
+    reactants: [
+      { substanceId: 'naoh', coef: 2 },
+      { substanceId: 'h2so4', coef: 1 },
+    ],
+    products: [
+      { substanceId: 'na2so4', coef: 1 },
+      { substanceId: 'h2o', coef: 2 },
+    ],
+    condition: '常温',
+    phenomenon: '常温下无明显肉眼变化，借助酸碱指示剂可观察到碱性逐渐消失，反应过程放热。',
+    knowledgePoint: '酸碱中和反应及化学方程式配平',
+    editions: ['通用版', '人教版', '沪教版', '鲁教版'],
+    source: DEFAULT_SOURCE,
+    priority: 88,
+    reviewStatus: DEFAULT_REVIEW,
+  },
+  // 19. 氢氧化钠与硫酸铜反应
+  {
+    id: 'rxn_naoh_cuso4',
+    name: '氢氧化钠溶液与硫酸铜溶液反应',
+    reactants: [
+      { substanceId: 'naoh', coef: 2 },
+      { substanceId: 'cuso4', coef: 1 },
+    ],
+    products: [
+      { substanceId: 'cuoh2', coef: 1, mark: '↓' },
+      { substanceId: 'na2so4', coef: 1 },
+    ],
+    condition: '常温',
+    phenomenon: '常温下向蓝色硫酸铜溶液中滴加无色氢氧化钠溶液，立即产生蓝色絮状沉淀，溶液蓝色逐渐变浅至无色。',
+    knowledgePoint: '碱与盐的复分解反应及氢氧化铜蓝色沉淀的特征鉴别',
+    editions: ['通用版', '人教版', '沪教版', '鲁教版'],
+    source: DEFAULT_SOURCE,
+    priority: 95,
+    reviewStatus: DEFAULT_REVIEW,
+  },
+  // 20. 铁与硫酸铜溶液置换反应
+  {
+    id: 'rxn_fe_cuso4',
+    name: '铁与硫酸铜溶液的置换反应（湿法炼铜原理）',
+    reactants: [
+      { substanceId: 'fe', coef: 1 },
+      { substanceId: 'cuso4', coef: 1 },
+    ],
+    products: [
+      { substanceId: 'feso4', coef: 1 },
+      { substanceId: 'cu', coef: 1 },
+    ],
+    condition: '常温',
+    phenomenon: '常温下将打磨光亮的铁钉浸入蓝色硫酸铜溶液中，铁钉表面覆盖一层紫红色固体，溶液由蓝色逐渐变为浅绿色。',
+    knowledgePoint: '金属活动性顺序（铁比铜活泼）及置换反应特征',
+    editions: ['通用版', '人教版', '沪教版', '鲁教版'],
+    source: DEFAULT_SOURCE,
+    priority: 99,
+    reviewStatus: DEFAULT_REVIEW,
+    arrowNote: '生成的单质铜附着在铁钉表面，初中化学方程式通常不标 ↓',
+  },
+  // 21. 铁与稀盐酸置换反应
+  {
+    id: 'rxn_fe_hcl',
+    name: '铁与稀盐酸反应',
+    reactants: [
+      { substanceId: 'fe', coef: 1 },
+      { substanceId: 'hcl', coef: 2 },
+    ],
+    products: [
+      { substanceId: 'fecl2', coef: 1 },
+      { substanceId: 'h2', coef: 1, mark: '↑' },
+    ],
+    condition: '常温',
+    phenomenon: '常温下铁表面有气泡产生，反应速率较慢，无色溶液逐渐变为浅绿色。',
+    knowledgePoint: '活泼金属与酸发生置换反应生成亚铁盐和氢气',
+    editions: ['通用版', '人教版', '沪教版', '鲁教版'],
+    source: DEFAULT_SOURCE,
+    priority: 93,
+    reviewStatus: DEFAULT_REVIEW,
+  },
+  // 22. 铁与稀硫酸置换反应
+  {
+    id: 'rxn_fe_h2so4',
+    name: '铁与稀硫酸反应',
+    reactants: [
+      { substanceId: 'fe', coef: 1 },
+      { substanceId: 'h2so4', coef: 1 },
+    ],
+    products: [
+      { substanceId: 'feso4', coef: 1 },
+      { substanceId: 'h2', coef: 1, mark: '↑' },
+    ],
+    condition: '常温',
+    phenomenon: '常温下铁表面有气泡缓慢产生，无色溶液逐渐变为浅绿色。',
+    knowledgePoint: '金属与稀硫酸的置换反应及亚铁离子溶液颜色',
+    editions: ['通用版', '人教版', '沪教版', '鲁教版'],
+    source: DEFAULT_SOURCE,
+    priority: 89,
+    reviewStatus: DEFAULT_REVIEW,
+  },
+  // 23. 实验室用锌与稀硫酸制取氢气
+  {
+    id: 'rxn_zn_h2so4',
+    name: '实验室用锌粒与稀硫酸制取氢气',
+    reactants: [
+      { substanceId: 'zn', coef: 1 },
+      { substanceId: 'h2so4', coef: 1 },
+    ],
+    products: [
+      { substanceId: 'znso4', coef: 1 },
+      { substanceId: 'h2', coef: 1, mark: '↑' },
+    ],
+    condition: '常温',
+    phenomenon: '常温下锌粒表面产生大量无色气泡，反应速率适中，锌粒逐渐溶解，溶液仍为无色。',
+    knowledgePoint: '实验室制取氢气的经典反应原理',
+    editions: ['通用版', '人教版', '沪教版', '鲁教版'],
+    source: DEFAULT_SOURCE,
+    priority: 98,
+    reviewStatus: DEFAULT_REVIEW,
+  },
+  // 24. 锌与硫酸铜反应
+  {
+    id: 'rxn_zn_cuso4',
+    name: '锌与硫酸铜溶液反应',
+    reactants: [
+      { substanceId: 'zn', coef: 1 },
+      { substanceId: 'cuso4', coef: 1 },
+    ],
+    products: [
+      { substanceId: 'znso4', coef: 1 },
+      { substanceId: 'cu', coef: 1 },
+    ],
+    condition: '常温',
+    phenomenon: '常温下锌片表面析出紫红色固体，蓝色溶液逐渐褪为无色。',
+    knowledgePoint: '验证锌的金属活动性强于铜',
+    editions: ['通用版', '人教版', '沪教版', '鲁教版'],
+    source: DEFAULT_SOURCE,
+    priority: 86,
+    reviewStatus: DEFAULT_REVIEW,
+  },
+  // 25. 氧化铁与稀盐酸反应（铁锈除锈）
+  {
+    id: 'rxn_fe2o3_hcl',
+    name: '稀盐酸除铁锈',
+    reactants: [
+      { substanceId: 'fe2o3', coef: 1 },
+      { substanceId: 'hcl', coef: 6 },
+    ],
+    products: [
+      { substanceId: 'fecl3', coef: 2 },
+      { substanceId: 'h2o', coef: 3 },
+    ],
+    condition: '常温',
+    phenomenon: '常温下向红棕色铁锈中加入稀盐酸，红棕色固体逐渐溶解，无色溶液变为黄色（若酸过量，随后铁钉表面还会产生气泡）。',
+    knowledgePoint: '酸与金属氧化物的反应及酸除铁锈不能浸泡过久的实验要点',
+    editions: ['通用版', '人教版', '沪教版', '鲁教版'],
+    source: DEFAULT_SOURCE,
+    priority: 96,
+    reviewStatus: DEFAULT_REVIEW,
+  },
+  // 26. 一氧化碳还原氧化铁（高炉炼铁）
+  {
+    id: 'rxn_co_fe2o3',
+    name: '一氧化碳高温还原氧化铁（工业炼铁原理）',
+    reactants: [
+      { substanceId: 'fe2o3', coef: 1 },
+      { substanceId: 'co', coef: 3 },
+    ],
+    products: [
+      { substanceId: 'fe', coef: 2 },
+      { substanceId: 'co2', coef: 3 },
+    ],
+    condition: '高温',
+    phenomenon: '高温下玻璃管内红棕色粉末逐渐变为黑色粉末（能被磁铁吸引），生成的气体使澄清石灰水变浑浊。',
+    knowledgePoint: '一氧化碳的还原性、高炉炼铁原理及尾气处理（点燃或收集）安全规范',
+    editions: ['通用版', '人教版', '沪教版', '鲁教版'],
+    source: DEFAULT_SOURCE,
+    priority: 97,
+    reviewStatus: DEFAULT_REVIEW,
+  },
+  // 27. 氧化铜与稀硫酸反应
+  {
+    id: 'rxn_cuo_h2so4',
+    name: '氧化铜与稀硫酸反应',
+    reactants: [
+      { substanceId: 'cuo', coef: 1 },
+      { substanceId: 'h2so4', coef: 1 },
+    ],
+    products: [
+      { substanceId: 'cuso4', coef: 1 },
+      { substanceId: 'h2o', coef: 1 },
+    ],
+    condition: '常温',
+    phenomenon: '常温（微热可加快）下向黑色氧化铜粉末中加入稀硫酸，黑色粉末逐渐溶解，无色溶液变为蓝色。',
+    knowledgePoint: '金属氧化物与酸反应生成盐和水',
+    editions: ['通用版', '人教版', '沪教版', '鲁教版'],
+    source: DEFAULT_SOURCE,
+    priority: 91,
+    reviewStatus: DEFAULT_REVIEW,
+  },
+  // 28. 氧化铜与稀盐酸反应
+  {
+    id: 'rxn_cuo_hcl',
+    name: '氧化铜与稀盐酸反应',
+    reactants: [
+      { substanceId: 'cuo', coef: 1 },
+      { substanceId: 'hcl', coef: 2 },
+    ],
+    products: [
+      { substanceId: 'cucl2', coef: 1 },
+      { substanceId: 'h2o', coef: 1 },
+    ],
+    condition: '常温',
+    phenomenon: '常温下黑色氧化铜粉末逐渐溶解，溶液由无色变为蓝绿色（稀溶液呈蓝色）。',
+    knowledgePoint: '金属氧化物与稀盐酸的反应',
+    editions: ['通用版', '人教版', '沪教版', '鲁教版'],
+    source: DEFAULT_SOURCE,
+    priority: 85,
+    reviewStatus: DEFAULT_REVIEW,
+  },
+  // 29. 氢气还原氧化铜
+  {
+    id: 'rxn_h2_cuo',
+    name: '氢气还原氧化铜',
+    reactants: [
+      { substanceId: 'h2', coef: 1 },
+      { substanceId: 'cuo', coef: 1 },
+    ],
+    products: [
+      { substanceId: 'cu', coef: 1 },
+      { substanceId: 'h2o', coef: 1 },
+    ],
+    condition: '加热',
+    phenomenon: '加热条件下，试管内黑色粉末逐渐变为紫红色固体，同时试管口内壁有水珠出现。',
+    knowledgePoint: '氢气的还原性及实验操作顺序（先通氢气排空气，后加热；实验结束先熄灯，继续通氢气至冷却）',
+    editions: ['通用版', '人教版', '沪教版', '鲁教版'],
+    source: DEFAULT_SOURCE,
+    priority: 92,
+    reviewStatus: DEFAULT_REVIEW,
+  },
+  // 30. 铜在空气中加热生成氧化铜
+  {
+    id: 'rxn_cu_o2_heat',
+    name: '铜在空气中加热氧化',
+    reactants: [
+      { substanceId: 'cu', coef: 2 },
+      { substanceId: 'o2', coef: 1 },
+    ],
+    products: [{ substanceId: 'cuo', coef: 2 }],
+    condition: '加热',
+    phenomenon: '加热时紫红色铜丝（或铜片）表面逐渐变黑。',
+    knowledgePoint: '铜的化学性质及质量守恒定律验证（铜粉在密闭容器中加热）',
+    editions: ['通用版', '人教版', '沪教版', '鲁教版'],
+    source: DEFAULT_SOURCE,
+    priority: 88,
+    reviewStatus: DEFAULT_REVIEW,
+  },
+  // 31. 一氧化碳燃烧
+  {
+    id: 'rxn_co_o2_burn',
+    name: '一氧化碳在空气中燃烧',
+    reactants: [
+      { substanceId: 'co', coef: 2 },
+      { substanceId: 'o2', coef: 1 },
+    ],
+    products: [{ substanceId: 'co2', coef: 2 }],
+    condition: '点燃',
+    phenomenon: '产生蓝色火焰，放出大量的热，生成的气体能使澄清石灰水变浑浊。',
+    knowledgePoint: '一氧化碳的可燃性及煤炉中的气体转化',
+    editions: ['通用版', '人教版', '沪教版', '鲁教版'],
+    source: DEFAULT_SOURCE,
+    priority: 90,
+    reviewStatus: DEFAULT_REVIEW,
+  },
+  // 32. 碳酸钠与稀盐酸反应（泡沫灭火器原理）
+  {
+    id: 'rxn_na2co3_hcl',
+    name: '碳酸钠与稀盐酸反应',
+    reactants: [
+      { substanceId: 'na2co3', coef: 1 },
+      { substanceId: 'hcl', coef: 2 },
+    ],
+    products: [
+      { substanceId: 'nacl', coef: 2 },
+      { substanceId: 'h2o', coef: 1 },
+      { substanceId: 'co2', coef: 1, mark: '↑' },
+    ],
+    condition: '常温',
+    phenomenon: '常温下白色粉末迅速溶解，产生大量无色气泡，反应非常剧烈。',
+    knowledgePoint: '碳酸根离子的检验方法（加稀盐酸产生能使澄清石灰水变浑浊的气体）',
+    editions: ['通用版', '人教版', '沪教版', '鲁教版'],
+    source: DEFAULT_SOURCE,
+    priority: 94,
+    reviewStatus: DEFAULT_REVIEW,
+  },
+  // 33. 碳酸钠与澄清石灰水反应（工业制烧碱原理）
+  {
+    id: 'rxn_na2co3_caoh2',
+    name: '碳酸钠溶液与氢氧化钙溶液反应',
+    reactants: [
+      { substanceId: 'na2co3', coef: 1 },
+      { substanceId: 'caoh2', coef: 1 },
+    ],
+    products: [
+      { substanceId: 'caco3', coef: 1, mark: '↓' },
+      { substanceId: 'naoh', coef: 2 },
+    ],
+    condition: '常温',
+    phenomenon: '常温下两种无色溶液混合后立即产生白色沉淀。',
+    knowledgePoint: '盐与碱的复分解反应及工业制取氢氧化钠的原理',
+    editions: ['通用版', '人教版', '沪教版', '鲁教版'],
+    source: DEFAULT_SOURCE,
+    priority: 91,
+    reviewStatus: DEFAULT_REVIEW,
+  },
+  // 34. 氯化钠与硝酸银反应
+  {
+    id: 'rxn_nacl_agno3',
+    name: '氯化钠溶液与硝酸银溶液反应',
+    reactants: [
+      { substanceId: 'nacl', coef: 1 },
+      { substanceId: 'agno3', coef: 1 },
+    ],
+    products: [
+      { substanceId: 'agcl', coef: 1, mark: '↓' },
+      { substanceId: 'nano3', coef: 1 },
+    ],
+    condition: '常温',
+    phenomenon: '常温下向氯化钠溶液中滴加硝酸银溶液，立即产生白色沉淀，加入稀硝酸沉淀不溶解。',
+    knowledgePoint: '氯离子的检验方法及复分解反应条件',
+    editions: ['通用版', '人教版', '沪教版', '鲁教版'],
+    source: DEFAULT_SOURCE,
+    priority: 90,
+    reviewStatus: DEFAULT_REVIEW,
+  },
+  // 35. 甲烷在空气中燃烧
+  {
+    id: 'rxn_ch4_o2_burn',
+    name: '甲烷（天然气）在空气中充分燃烧',
+    reactants: [
+      { substanceId: 'ch4', coef: 1 },
+      { substanceId: 'o2', coef: 2 },
+    ],
+    products: [
+      { substanceId: 'co2', coef: 1 },
+      { substanceId: 'h2o', coef: 2 },
+    ],
+    condition: '点燃',
+    phenomenon: '产生明亮的蓝色火焰，放出大量的热，干冷烧杯内壁出现水雾，生成的气体能使澄清石灰水变浑浊。',
+    knowledgePoint: '天然气的主要成分及有机物燃烧产物的检验',
+    editions: ['通用版', '人教版', '沪教版', '鲁教版'],
+    source: DEFAULT_SOURCE,
+    priority: 95,
+    reviewStatus: DEFAULT_REVIEW,
+  },
+  // 36. 氢氧化钙与稀盐酸中和反应
+  {
+    id: 'rxn_caoh2_hcl',
+    name: '氢氧化钙与稀盐酸反应（改良酸性土壤原理）',
+    reactants: [
+      { substanceId: 'caoh2', coef: 1 },
+      { substanceId: 'hcl', coef: 2 },
+    ],
+    products: [
+      { substanceId: 'cacl2', coef: 1 },
+      { substanceId: 'h2o', coef: 2 },
+    ],
+    condition: '常温',
+    phenomenon: '常温下白色氢氧化钙悬浊液加入稀盐酸后逐渐变为澄清无色溶液。',
+    knowledgePoint: '熟石灰改良酸性土壤的化学原理',
+    editions: ['通用版', '人教版', '沪教版', '鲁教版'],
+    source: DEFAULT_SOURCE,
+    priority: 87,
+    reviewStatus: DEFAULT_REVIEW,
+  },
+];
