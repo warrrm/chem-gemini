@@ -23,6 +23,7 @@ const MOCK_VISION_CONFIG: OnlineAIConfig = {
   providerMode: 'vision',
   baseURL: 'https://opencode.ai/zen/v1',
   model: 'gpt-4o-mini',
+  credentialSource: 'session',
   apiKey: 'sk-test-dummy-key-never-real',
   imageUploadConsented: true,
 };
@@ -32,24 +33,27 @@ const MOCK_DEEPSEEK_CONFIG: OnlineAIConfig = {
   providerPreset: 'deepseek',
   providerMode: 'text_assist',
   baseURL: 'https://api.deepseek.com/v1',
-  model: 'deepseek-chat',
+  model: 'deepseek-flash',
+  credentialSource: 'session',
   apiKey: 'sk-deepseek-dummy-key-never-real',
   imageUploadConsented: false,
 };
 
 describe('P1 DeepSeek & Provider Presets Configuration', () => {
-  it('applies DeepSeek preset with official baseURL, deepseek-chat model, and text_assist mode', () => {
+  it('applies DeepSeek V4.1 Flash preset with native vision and server-side credentials', () => {
     const next = applyProviderPreset(DEFAULT_ONLINE_AI_CONFIG, 'deepseek');
     expect(next.enabled).toBe(true);
     expect(next.providerPreset).toBe('deepseek');
-    expect(next.providerMode).toBe('text_assist');
+    expect(next.providerMode).toBe('vision');
     expect(next.baseURL).toBe('https://api.deepseek.com/v1');
-    expect(next.model).toBe('deepseek-chat');
+    expect(next.model).toBe('deepseek-flash');
+    expect(next.credentialSource).toBe('server');
+    expect(next.apiKey).toBe('');
   });
 
   it('formats active provider display name accurately for Demo vs DeepSeek', () => {
-    expect(getActiveProviderDisplayName(DEFAULT_ONLINE_AI_CONFIG)).toBe('演示模式');
-    expect(getActiveProviderDisplayName(MOCK_DEEPSEEK_CONFIG)).toBe('DeepSeek (deepseek-chat)');
+    expect(getActiveProviderDisplayName(applyProviderPreset(DEFAULT_ONLINE_AI_CONFIG, 'demo'))).toBe('演示模式');
+    expect(getActiveProviderDisplayName(MOCK_DEEPSEEK_CONFIG)).toBe('DeepSeek V4.1 Flash (deepseek-flash)');
   });
 });
 
@@ -119,11 +123,11 @@ describe('P1 DeepSeek LLMTextAssistProvider & VisionProvider Execution and Fallb
     const res = await provider.recognize({ text: '白色片状固体，常用于炉具清洁剂去油污' });
 
     expect(capturedUrl).toBe('https://api.deepseek.com/v1/chat/completions');
-    expect(capturedBody.model).toBe('deepseek-chat');
+    expect(capturedBody.model).toBe('deepseek-flash');
     expect(capturedBody.response_format).toEqual({ type: 'json_object' });
     expect(res.status).toBe('ok');
     expect(res.candidates).toEqual([{ substanceId: 'naoh' }]);
-    expect(res.fallbackNotice).toContain('DeepSeek (deepseek-chat)');
+    expect(res.fallbackNotice).toContain('DeepSeek V4.1 Flash (deepseek-flash)');
   });
 
   it('falls back gracefully to LocalTextMatcher when DeepSeek HTTP request fails', async () => {

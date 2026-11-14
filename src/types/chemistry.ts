@@ -169,7 +169,7 @@ export type AppRunMode = 'demo' | 'online';
 
 export type OnlineProviderMode = 'vision' | 'text_assist';
 
-export type AIProviderPresetId = 'demo' | 'deepseek' | 'opencode_vision' | 'custom';
+export type AIProviderPresetId = 'demo' | 'deepseek' | 'volcengine_deepseek' | 'opencode_vision' | 'custom';
 
 export interface OnlineAIConfig {
   enabled: boolean;
@@ -177,6 +177,8 @@ export interface OnlineAIConfig {
   providerMode: OnlineProviderMode;
   baseURL: string;
   model: string;
+  /** server: 本地网关使用 .env.local；session: 用户自备 Key，仅存当前标签页。 */
+  credentialSource: 'server' | 'session';
   apiKey: string;
   imageUploadConsented: boolean;
 }

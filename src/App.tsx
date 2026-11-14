@@ -20,6 +20,7 @@ import {
 } from './modules/recognition';
 import {
   getActiveProviderDisplayName,
+  isOnlineAIEnabled,
   loadOnlineAIConfig,
   saveOnlineAIConfig,
 } from './modules/recognition/aiConfig';
@@ -66,6 +67,7 @@ export const App: React.FC = () => {
     blob: Blob;
     fileName: string;
     sourceType: 'upload' | 'camera';
+    config: OnlineAIConfig;
   } | null>(null);
 
   const [manualQuery, setManualQuery] = useState('');
@@ -76,8 +78,10 @@ export const App: React.FC = () => {
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const previousBlobUrlRef = useRef<string | null>(null);
+  const recognitionRequestId = useRef(0);
+  const textRequestId = useRef(0);
 
-  const isOnlineModeActive = aiConfig.enabled && Boolean(aiConfig.apiKey.trim());
+  const isOnlineModeActive = isOnlineAIEnabled(aiConfig);
   const activeEngineLabel = getActiveProviderDisplayName(aiConfig);
   const isDeepSeekActive =
     isOnlineModeActive &&
@@ -147,6 +151,8 @@ export const App: React.FC = () => {
   );
 
   const resetManualSearch = () => {
+    textRequestId.current++;
+    setIsSearchingText(false);
     setManualQuery('');
     setManualMatches([]);
     setManualFeedback(null);
@@ -154,6 +160,8 @@ export const App: React.FC = () => {
   };
 
   const handleSelectSample = async (sample: DemoSample) => {
+    const requestId = ++recognitionRequestId.current;
+    setPendingConsentUpload(null);
     resetManualSearch();
     dispatch({
       type: 'START_RECOGNIZING',
@@ -161,15 +169,18 @@ export const App: React.FC = () => {
       sampleId: sample.id,
     });
     const res = await demoProvider.recognize({ sampleId: sample.id });
-    dispatch({ type: 'RECOGNITION_DONE', result: res });
+    if (requestId === recognitionRequestId.current) dispatch({ type: 'RECOGNITION_DONE', result: res });
   };
 
   const runRecognitionForBlob = async (
     blob: Blob,
     fileName: string,
     sourceType: 'upload' | 'camera',
-    useOnlineVision: boolean
+    useOnlineVision: boolean,
+    config: OnlineAIConfig = aiConfig
   ) => {
+    const requestId = ++recognitionRequestId.current;
+    const online = isOnlineAIEnabled(config);
     resetManualSearch();
     const objectUrl = URL.createObjectURL(blob);
     dispatch({
@@ -179,14 +190,14 @@ export const App: React.FC = () => {
       fileName,
     });
 
-    if (useOnlineVision && isOnlineModeActive && aiConfig.providerMode === 'vision') {
-      const vision = new VisionProvider(aiConfig);
+    if (useOnlineVision && online && config.providerMode === 'vision') {
+      const vision = new VisionProvider(config);
       const res = await vision.recognize({ image: blob });
-      dispatch({ type: 'RECOGNITION_DONE', result: res });
+      if (requestId === recognitionRequestId.current) dispatch({ type: 'RECOGNITION_DONE', result: res });
       return;
     }
 
-    if (isOnlineModeActive && aiConfig.providerMode === 'text_assist') {
+    if (online && config.providerMode === 'text_assist') {
       dispatch({
         type: 'RECOGNITION_DONE',
         result: {
@@ -200,7 +211,7 @@ export const App: React.FC = () => {
     }
 
     const res = await demoProvider.recognize({ image: blob });
-    dispatch({ type: 'RECOGNITION_DONE', result: res });
+    if (requestId === recognitionRequestId.current) dispatch({ type: 'RECOGNITION_DONE', result: res });
   };
 
   const handleProcessBlob = async (
@@ -208,12 +219,13 @@ export const App: React.FC = () => {
     fileName: string,
     sourceType: 'upload' | 'camera'
   ) => {
+    recognitionRequestId.current++;
     if (
       isOnlineModeActive &&
       aiConfig.providerMode === 'vision' &&
       !aiConfig.imageUploadConsented
     ) {
-      setPendingConsentUpload({ blob, fileName, sourceType });
+      setPendingConsentUpload({ blob, fileName, sourceType, config: { ...aiConfig } });
       return;
     }
 
@@ -227,19 +239,19 @@ export const App: React.FC = () => {
 
   const handleAgreeConsent = async () => {
     if (!pendingConsentUpload) return;
-    const nextCfg: OnlineAIConfig = { ...aiConfig, imageUploadConsented: true };
+    const nextCfg: OnlineAIConfig = { ...pendingConsentUpload.config, imageUploadConsented: true };
     saveOnlineAIConfig(nextCfg);
     setAiConfig(nextCfg);
     const pending = pendingConsentUpload;
     setPendingConsentUpload(null);
-    await runRecognitionForBlob(pending.blob, pending.fileName, pending.sourceType, true);
+    await runRecognitionForBlob(pending.blob, pending.fileName, pending.sourceType, true, nextCfg);
   };
 
   const handleDeclineConsent = async () => {
     if (!pendingConsentUpload) return;
     const pending = pendingConsentUpload;
     setPendingConsentUpload(null);
-    await runRecognitionForBlob(pending.blob, pending.fileName, pending.sourceType, false);
+    await runRecognitionForBlob(pending.blob, pending.fileName, pending.sourceType, false, pending.config);
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -263,11 +275,13 @@ export const App: React.FC = () => {
       return;
     }
 
+    const requestId = ++textRequestId.current;
     setIsSearchingText(true);
     try {
       const res = isOnlineModeActive
         ? await new LLMTextAssistProvider(aiConfig).recognize({ text: q })
         : await localTextMatcher.recognize({ text: q });
+      if (requestId !== textRequestId.current) return;
 
       if (res.status === 'ok' && res.candidates.length > 0) {
         setManualMatches(res.candidates.map((c) => c.substanceId));
@@ -287,7 +301,7 @@ export const App: React.FC = () => {
         );
       }
     } finally {
-      setIsSearchingText(false);
+      if (requestId === textRequestId.current) setIsSearchingText(false);
     }
   };
 
@@ -297,6 +311,8 @@ export const App: React.FC = () => {
   };
 
   const handleConfirmSubstance = (substanceId: string) => {
+    recognitionRequestId.current++;
+    resetManualSearch();
     dispatch({ type: 'CONFIRM_SUBSTANCE', substanceId });
   };
 
@@ -305,9 +321,18 @@ export const App: React.FC = () => {
   };
 
   const handleResetAll = () => {
+    recognitionRequestId.current++;
     resetManualSearch();
+    setPendingConsentUpload(null);
     setStep2AIPanelOpen(false);
     dispatch({ type: 'RESET_ALL' });
+  };
+
+  const handleUpdateAIConfig = (next: OnlineAIConfig) => {
+    recognitionRequestId.current++;
+    resetManualSearch();
+    setPendingConsentUpload(null);
+    setAiConfig(next);
   };
 
   const step2CandidateIds = useMemo(() => {
@@ -355,7 +380,7 @@ export const App: React.FC = () => {
                 ⚗️
               </span>
               <span className="brand-texts">
-                <strong className="brand-title">化学识物小课堂</strong>
+                <strong className="brand-title">化学识物小课堂 · P1</strong>
                 <span className="brand-slogan">从一张照片，认识一种物质</span>
               </span>
             </button>
@@ -366,7 +391,7 @@ export const App: React.FC = () => {
               type="button"
               className={`mode-badge ${isOnlineModeActive ? 'is-online' : 'is-demo'}`}
               onClick={() => setSettingsOpen(true)}
-              title="点击切换运行模式（演示模式 / DeepSeek / 多模态）与教师演示设置"
+              title="管理在线识图、离线演示、API 连接与教师演示设置"
               data-testid="run-mode-badge"
             >
               {isOnlineModeActive ? `在线增强 · ${activeEngineLabel}` : '演示模式'}
@@ -502,12 +527,12 @@ export const App: React.FC = () => {
               </div>
 
               <p className="privacy-note">
-                隐私说明：你上传或拍摄的图片仅在当前浏览器会话内存中使用，不写入持久化缓存；在线增强模式支持选择 DeepSeek 或多模态模型，API Key 仅存当前标签页 sessionStorage。
+                隐私说明：图片预览仅保留在当前页面内存中；默认由 DeepSeek V4.1 Flash 识图，发送前需你授权。默认 Key 仅由本机服务端保管；自备 API Key 仅存当前标签页 sessionStorage。
               </p>
             </section>
 
             {/* 可视化 AI 辅助模型选择与 API 提交面板（直接展示在首页） */}
-            <AIModelPanel config={aiConfig} onSaveConfig={setAiConfig} />
+            <AIModelPanel config={aiConfig} onSaveConfig={handleUpdateAIConfig} />
 
             <section className="samples-section" aria-labelledby="samples-heading">
               <div className="section-head">
@@ -643,7 +668,7 @@ export const App: React.FC = () => {
                     <div className="step2-ai-drawer">
                       <AIModelPanel
                         config={aiConfig}
-                        onSaveConfig={setAiConfig}
+                        onSaveConfig={handleUpdateAIConfig}
                         compact
                       />
                     </div>
@@ -931,7 +956,7 @@ export const App: React.FC = () => {
         config={aiConfig}
         teacherMode={state.teacherMode}
         onClose={() => setSettingsOpen(false)}
-        onSaveConfig={(next) => setAiConfig(next)}
+        onSaveConfig={handleUpdateAIConfig}
         onUpdateTeacherMode={(patch) =>
           dispatch({ type: 'UPDATE_TEACHER_MODE', patch })
         }
@@ -939,8 +964,8 @@ export const App: React.FC = () => {
 
       <ThirdPartyConsentModal
         isOpen={Boolean(pendingConsentUpload)}
-        baseURL={aiConfig.baseURL}
-        model={aiConfig.model}
+        baseURL={pendingConsentUpload?.config.baseURL ?? aiConfig.baseURL}
+        model={pendingConsentUpload?.config.model ?? aiConfig.model}
         onAgree={handleAgreeConsent}
         onDecline={handleDeclineConsent}
       />
@@ -974,7 +999,7 @@ export const App: React.FC = () => {
               </p>
               <p>
                 <strong>隐私与 API Key 安全承诺：</strong>
-                用户拍摄或上传的照片仅保存在当前浏览器页面内存中（URL.createObjectURL）；如启用 DeepSeek 或其他在线模型，所填 API Key 仅保存在当前标签页的 sessionStorage 中，绝不写入代码或持久化存储。
+                图片预览仅保存在当前页面内存中（URL.createObjectURL）；在线识图会在你授权后将压缩图片发送给所选模型。内置 DeepSeek Key 只由本机服务端读取，不进入浏览器或构建产物；自备 Key 仅存当前标签页 sessionStorage。
               </p>
             </div>
           </div>

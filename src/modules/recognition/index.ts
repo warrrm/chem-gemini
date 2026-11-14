@@ -7,7 +7,18 @@ import {
   SampleHotspot,
 } from '../../types/chemistry';
 import { searchSubstancesByName } from '../knowledge';
-import { getActiveProviderDisplayName } from './aiConfig';
+import {
+  getActiveProviderDisplayName,
+  getAIRequestTarget,
+  getModelRequestOptions,
+  hasOnlineCredentials,
+} from './aiConfig';
+import { AI_REQUEST_TIMEOUT_MS, DEEPSEEK_FLASH_MODEL } from './defaults';
+
+export { normalizeBaseURL, normalizeEndpoint } from './aiConfig';
+
+// 原生 fetch 存为类成员后直接调用会改变 this，部分浏览器因此报 Illegal invocation。
+const defaultFetch: typeof fetch = (input, init) => globalThis.fetch(input, init);
 
 /**
  * 构建知识库白名单目录（仅向大模型传递 id 与 name/aliases，且只允许模型返回已知 ID）
@@ -63,6 +74,9 @@ export function sanitizeModelRecognitionJSON(
 
   const obj = parsed as Record<string, unknown>;
   const rawStatus = typeof obj.status === 'string' ? obj.status : 'ambiguous';
+  if (!['ok', 'ambiguous', 'out_of_scope'].includes(rawStatus)) {
+    return { status: 'ambiguous', candidates: [], message: '识别结果状态不合法，请补充标签文字或重试。', providerUsed };
+  }
 
   if (rawStatus === 'out_of_scope') {
     const outId = typeof obj.outOfScopeId === 'string' ? obj.outOfScopeId : '';
@@ -98,21 +112,21 @@ export function sanitizeModelRecognitionJSON(
       if (!rawObj || typeof rawObj !== 'object') return;
       const o = rawObj as Record<string, unknown>;
       const bboxRaw = Array.isArray(o.bbox) ? o.bbox : null;
-      if (!bboxRaw || bboxRaw.length !== 4 || bboxRaw.some((n) => typeof n !== 'number')) return;
+      if (!bboxRaw || bboxRaw.length !== 4 || bboxRaw.some((n) => typeof n !== 'number' || !Number.isFinite(n))) return;
+      const x = Math.max(0, Math.min(92, bboxRaw[0] as number));
+      const y = Math.max(0, Math.min(92, bboxRaw[1] as number));
       const clampedBbox: [number, number, number, number] = [
-        Math.max(0, Math.min(90, bboxRaw[0] as number)),
-        Math.max(0, Math.min(90, bboxRaw[1] as number)),
-        Math.max(8, Math.min(100, bboxRaw[2] as number)),
-        Math.max(8, Math.min(100, bboxRaw[3] as number)),
+        x, y,
+        Math.max(8, Math.min(100 - x, bboxRaw[2] as number)),
+        Math.max(8, Math.min(100 - y, bboxRaw[3] as number)),
       ];
       const isApparatus = Boolean(o.isApparatus);
       const subId = typeof o.substanceId === 'string' && SUBSTANCE_BY_ID.has(o.substanceId) ? o.substanceId : undefined;
-      const label =
-        typeof o.label === 'string' && o.label.trim()
-          ? o.label.trim().slice(0, 20)
-          : subId
-          ? SUBSTANCE_BY_ID.get(subId)!.name
-          : '实验仪器';
+      // 化学物质只使用本地名称，杜绝模型 label 剧透化学式/性质。
+      const apparatusLabel = typeof o.label === 'string'
+        ? ['烧杯', '试管', '量筒', '酒精灯', '漏斗', '玻璃棒', '铁架台', '集气瓶', '滴管'].find((name) => (o.label as string).includes(name))
+        : undefined;
+      const label = isApparatus ? apparatusLabel ?? '实验仪器' : subId ? SUBSTANCE_BY_ID.get(subId)!.name : '实验仪器';
 
       if (isApparatus) {
         validObjects.push({
@@ -133,7 +147,11 @@ export function sanitizeModelRecognitionJSON(
     });
   }
 
-  if (validObjects.length > 1) {
+  if (rawStatus === 'ok' && validObjects.length === 1 && validObjects[0].substanceId && !validCandidateIds.includes(validObjects[0].substanceId)) {
+    validCandidateIds.push(validObjects[0].substanceId);
+  }
+
+  if (rawStatus === 'ok' && validObjects.length > 1) {
     return {
       status: 'ok',
       candidates: [],
@@ -213,11 +231,7 @@ async function blobToResizedDataUrl(blob: Blob): Promise<string> {
   });
 }
 
-export function normalizeEndpoint(baseURL: string): string {
-  const trimmed = baseURL.trim().replace(/\/+$/, '');
-  if (trimmed.endsWith('/chat/completions')) return trimmed;
-  return `${trimmed}/chat/completions`;
-}
+// normalizeEndpoint imported from ./aiConfig
 
 /**
  * P0 默认演示模式识别器
@@ -324,7 +338,7 @@ export class LocalTextMatcher implements RecognitionProvider {
 }
 
 /**
- * P1 文本辅助映射器（LLMTextAssist — 完美适配 DeepSeek deepseek-chat / deepseek-reasoner）：
+ * P1 文本辅助映射器（与 DeepSeek Flash 识图共享同一配置和安全网关）：
  * - 不能看图，仅把用户输入的标签文字、俗称、外观或用途描述映射到知识库白名单 substanceId
  * - 当用户填写了 API Key 且启用在线模式时，真实发起请求调用 DeepSeek / 兼容接口
  * - 任何失败一律自动降级到 LocalTextMatcher，绝不白屏
@@ -334,7 +348,7 @@ export class LLMTextAssistProvider implements RecognitionProvider {
   private readonly config: OnlineAIConfig;
   private readonly fetchImpl: typeof fetch;
 
-  constructor(config: OnlineAIConfig, fetchImpl: typeof fetch = fetch) {
+  constructor(config: OnlineAIConfig, fetchImpl: typeof fetch = defaultFetch) {
     this.config = config;
     this.fetchImpl = fetchImpl;
   }
@@ -357,7 +371,7 @@ export class LLMTextAssistProvider implements RecognitionProvider {
       return localFirst;
     }
 
-    if (!this.config.apiKey.trim()) {
+    if (!hasOnlineCredentials(this.config)) {
       return {
         ...localFirst,
         fallbackNotice: '未填写 API Key，已自动使用本地词库匹配。',
@@ -377,11 +391,13 @@ export class LLMTextAssistProvider implements RecognitionProvider {
       `已知超纲物质名单：${JSON.stringify(catalog.outOfScope)}`,
     ].join('\n');
 
-    const modelName = this.config.model.trim() || 'deepseek-chat';
+    const modelName = this.config.model.trim() || DEEPSEEK_FLASH_MODEL;
     const isReasoner = modelName.toLowerCase().includes('reasoner');
 
     const payload: Record<string, unknown> = {
       model: modelName,
+      max_tokens: 2048,
+      ...getModelRequestOptions(this.config),
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: `用户输入描述/标签文字：${query}` },
@@ -394,15 +410,13 @@ export class LLMTextAssistProvider implements RecognitionProvider {
     }
 
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 20000);
+    const timer = setTimeout(() => controller.abort(), AI_REQUEST_TIMEOUT_MS);
 
     try {
-      const resp = await this.fetchImpl(normalizeEndpoint(this.config.baseURL), {
+      const { endpoint, headers } = getAIRequestTarget(this.config);
+      const resp = await this.fetchImpl(endpoint, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.config.apiKey.trim()}`,
-        },
+        headers,
         body: JSON.stringify(payload),
         signal: controller.signal,
       });
@@ -459,7 +473,7 @@ export class VisionProvider implements RecognitionProvider {
   private readonly config: OnlineAIConfig;
   private readonly fetchImpl: typeof fetch;
 
-  constructor(config: OnlineAIConfig, fetchImpl: typeof fetch = fetch) {
+  constructor(config: OnlineAIConfig, fetchImpl: typeof fetch = defaultFetch) {
     this.config = config;
     this.fetchImpl = fetchImpl;
   }
@@ -479,11 +493,18 @@ export class VisionProvider implements RecognitionProvider {
       };
     }
 
-    if (!this.config.apiKey.trim()) {
+    if (!this.config.imageUploadConsented) {
+      return {
+        status: 'ambiguous', candidates: [], providerUsed: 'local_text',
+        message: '尚未同意向第三方模型发送图片，本次未上传；可授权后重试或使用本地搜索。',
+      };
+    }
+
+    if (!hasOnlineCredentials(this.config)) {
       return {
         status: 'ambiguous',
         candidates: [],
-        message: '尚未填写 API Key，已降级为本地模式，请在下方手动输入或搜索物质名称。',
+        message: '尚未配置有效凭据，已降级为本地模式，请在下方手动输入或搜索物质名称。',
         providerUsed: 'local_text',
         fallbackNotice: '未检测到 API Key，已降级为本地手动选择模式。',
       };
@@ -503,19 +524,20 @@ export class VisionProvider implements RecognitionProvider {
     ].join('\n');
 
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 25000);
+    const timer = setTimeout(() => controller.abort(), AI_REQUEST_TIMEOUT_MS);
 
     try {
       const imageDataUrl = await blobToResizedDataUrl(input.image);
-      const resp = await this.fetchImpl(normalizeEndpoint(this.config.baseURL), {
+      const { endpoint, headers } = getAIRequestTarget(this.config);
+      const resp = await this.fetchImpl(endpoint, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.config.apiKey.trim()}`,
-        },
+        headers,
         body: JSON.stringify({
-          model: this.config.model.trim() || 'gpt-4o-mini',
+          model: this.config.model.trim() || DEEPSEEK_FLASH_MODEL,
           temperature: 0.1,
+          max_tokens: 2048,
+          response_format: { type: 'json_object' },
+          ...getModelRequestOptions(this.config),
           messages: [
             { role: 'system', content: systemPrompt },
             {
@@ -541,10 +563,9 @@ export class VisionProvider implements RecognitionProvider {
       return sanitizeModelRecognitionJSON(content, 'vision');
     } catch (err) {
       const errDetail = err instanceof Error ? err.message : '网络或接口异常';
-      const deepseekTip =
-        this.config.baseURL.includes('deepseek') || this.config.model.includes('deepseek')
-          ? '（提示：DeepSeek 官方接口为纯文本模型，不支持直接传图，请切换为「DeepSeek 官方模型（文本辅助）」并在下方输入标签文字或描述）'
-          : '';
+      const deepseekTip = this.config.credentialSource === 'server'
+        ? '（内置连接需要本机 dev/preview 服务及 .env.local；纯静态站点请切换自备 API Key）'
+        : '（请核对 API Key、余额和所选模型的图片输入能力）';
       return {
         status: 'ambiguous',
         candidates: [],

@@ -1,6 +1,14 @@
 import { expect, test } from '@playwright/test';
 
 test.describe('化学识物小课堂 — 5 大必测验收场景 (Section 11)', () => {
+  // 经典场景只验证本地教学流程，不调用真实付费 API。
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => sessionStorage.setItem('chem_gemini_p1_online_config_v2', JSON.stringify({
+      enabled: false, providerPreset: 'demo', providerMode: 'text_assist',
+      baseURL: 'https://api.deepseek.com/v1', model: 'deepseek-flash',
+      credentialSource: 'server', apiKey: '', imageUploadConsented: false,
+    })));
+  });
   test('场景 1：有清晰标签的物质（稀盐酸溶液 & 氢氧化钠纯净物）防剧透与解锁全流程', async ({ page }) => {
     await page.goto('./');
 

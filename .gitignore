@@ -1,5 +1,7 @@
 node_modules
 dist
+pages-dist
+.pages-p0
 .DS_Store
 .local-shell-mcp
 test-results
@@ -8,3 +10,4 @@ blob-report
 playwright/.cache
 .env
 .env.*
+!.env.example

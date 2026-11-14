@@ -1,4 +1,9 @@
-# 化学识物小课堂 (`chem-gemini`)
+# 化学识物小课堂 P1 (`chem-gemini`)
+
+- **P1 最终网页**：<https://warrrm.github.io/chem-gemini/p1/>
+- **P1 独立分支**：[`p1-release`](https://github.com/warrrm/chem-gemini/tree/p1-release)
+- **P0 保留网页**：<https://warrrm.github.io/chem-gemini/>（`p0-stable` / `v1.0.0-p0`）
+- [P1 发布与版本隔离说明](docs/P1-发布说明.md)
 
 > **从一张照片，认识一种物质** —— 面向初中学生的互动式化学学习与教师课堂演示网站。
 
@@ -17,14 +22,18 @@
 
 ## 在线增强模式与教师课堂模式（正式版增强功能）
 
-- **在线增强模式（自带模型 Key）**：点击顶部「设置」可配置兼容 OpenAI 接口的 `baseURL`（预填 `https://opencode.ai/zen/v1`）、模型名称及 `API Key`（Key 仅保存在当前标签页 `sessionStorage` 中，关闭标签页即清除，绝不写入代码或持久化存储）。支持**多模态识图（`VisionProvider`）**与**仅文本辅助映射（`LLMTextAssist`）**两种模式；上传图片发送第三方接口前强制弹出知情同意确认，模型仅负责把输入映射到知识库合法 `substanceId`，调用失败时自动无缝降级到本地模式。
-- **教师演示模式**：点击顶部「👩‍🏫 教师模式」可开启课堂演示控制台，支持**投影大字号排版**、**化学式关卡教师手动直接解锁**、**练习题答案延迟公布**，以及 `Alt + ← / →` 键盘快捷键切换步骤。
+- **默认 AI 识图：DeepSeek V4.1 Flash**：P1 默认启用原生多模态识图，官方 API 模型 ID 为 **`deepseek-flash`**，接口为 `https://api.deepseek.com/v1`。上传或拍照后经授权，将压缩图片以 `image_url` 内容块发送给模型；不再要求手动抄写标签才能识别。
+- **默认 Key 的安全使用**：本机 `npm run dev` 和 `npm run preview` 通过同源网关调用 DeepSeek，Key 仅从 Git 忽略的 `.env.local` 中读取，不进入源码、浏览器、sessionStorage 或生产 JS。网关仅允许本机/同源访问，限制请求大小、并发和频率，不保存图片或请求日志。
+- **精简 AI 选择页面**：首页只保留「在线 AI 识图」和「离线演示」，不再提供「火山方舟 DeepSeek」「多模态识图」「自定义接口」三个快捷入口；设置弹窗也同步移除多余预设和模型推荐按钮。更换 API 直接编辑连接表单即可，已有配置继续兼容。
+- **允许更换 API**：在首页模型面板或「设置与教师模式」中选择「自备 API Key」，可修改 `baseURL`、模型与能力模式，也支持导入 JSON、`.env` 或 curl 配置。自备 Key 仅存当前标签页 `sessionStorage`，需要所选接口允许浏览器跨域调用。更换接口会清除旧 Key，并撤销图片传输授权；切换模型或能力也需要重新授权。可一键「恢复内置 DeepSeek 识图」。
+- **识别范围与降级**：模型仅把图片/文字映射到本地知识库合法 `substanceId`，不生成知识正文；失败时显示原因并降级为本地搜索。离线演示仍可选择，内置样例始终使用本地预设结果，不消耗模型额度。
+- **教师演示模式**：点击顶部「设置与教师模式」可开启课堂演示设置，支持**投影大字号排版**、**化学式关卡教师手动直接解锁**、**练习题答案延迟公布**，以及 `Alt + ← / →` 键盘快捷键切换步骤。
 
 ## 数据与审校说明
 
-- **审校状态**：当前内置的 45 种物质（含 29 种核心物质/混合物/溶液及 16 种反应关联延伸物质）、36 条化学反应方程式与 65 道随堂练习题均标注为 **「AI 整理，尚未经教师审校」**，出处统一标注为 **「通用初中化学基础（知识库自编，未对应具体页码）」**，不虚构任何教材章节与页码。
+- **审校状态**：当前内置的 49 种物质（含 30 种核心物质/混合物/溶液及 19 种反应关联延伸物质）、40 条化学反应方程式与 67 道随堂练习题（60 道单选、7 道探究）均标注为 **「AI 整理，尚未经教师审校」**，出处统一标注为 **「通用初中化学基础（知识库自编，未对应具体页码）」**，不虚构任何教材章节与页码。
 - **教材版本配置**：支持切换「通用版」「人教版」「沪教版」「鲁教版」标签筛选，页面常驻提示「版本适配仅供参考，以所用教材为准」。
-- **隐私保护**：用户拍摄或上传的图片仅在当前浏览器会话内存中使用（`URL.createObjectURL`），不写入持久化存储，不上传至任何服务器。
+- **隐私保护**：图片预览仅在当前页面内存中使用（`URL.createObjectURL`），不写入本地持久化存储。在线识图会在授权后向所选第三方发送压缩图片；本机网关仅转发、不保存图片，第三方的数据处理以其政策为准。拒绝授权时不发送图片，仍可使用本地名称选择。
 
 ## 本地运行与测试
 
@@ -32,23 +41,57 @@
 # 1. 安装依赖
 npm install
 
-# 2. 校验结构化化学数据（原子守恒、气体/沉淀符号、质量比、安全性）
+# 2. 首次在其他电脑使用：复制模板，在 .env.local 中填写默认 Key
+# 本机已配置时不需要覆盖现有 .env.local
+cp -n .env.example .env.local
+# 编辑 .env.local：DEEPSEEK_API_KEY=你的密钥（不要加 VITE_ 前缀）
+
+# 3. 校验结构化化学数据（原子守恒、气体/沉淀符号、质量比、安全性）
 npm run validate:data
 
-# 3. 运行单元测试
+# 4. 运行单元测试（含网关、凭据隔离、图片请求和配置迁移）
 npm test
 
-# 4. 启动本地开发服务器
+# 5. 启动本地开发服务器，访问 http://127.0.0.1:4173/chem-gemini/
 npm run dev
 
-# 5. 构建生产版本并运行端到端验收测试
+# 6. 构建生产版本并运行端到端验收测试（模拟 API，不使用真实额度）
 npm run build
 npm run test:e2e
+# 若 4173 已被占用，可改端口：PLAYWRIGHT_PORT=4187 npm run test:e2e
+
+# 7. 本机预览生产构建（同样支持默认密钥网关）
+npm run preview
+
+# 8. 可选：真实 DeepSeek 图片冒烟测试（会消耗真实模型额度，需明确开启）
+RUN_LIVE_AI_TEST=1 npm run test:live
 ```
 
 ## GitHub Pages 部署说明
 
-本项目已配置 `.github/workflows/deploy.yml` 自动化部署工作流（`base: '/chem-gemini/'`）。将代码推送至 GitHub 仓库 `chem-gemini` 的 `main` 分支，并在仓库 **Settings → Pages → Build and deployment → Source** 中选择 **GitHub Actions**，即可自动完成数据校验、单元测试、构建与发布：
+**重要：GitHub Pages 只能托管静态文件，不能运行默认密钥网关。** 部署后的静态网页不会包含本机 Key；需要在页面选择自备 API Key（受接口 CORS 支持限制），或另行部署带鉴权、限流的服务端网关。本项目自带网关有意限制为本机使用，不应直接开放到公网。不要通过 `VITE_` 变量或将 `.env.local` 提交到仓库来让静态站点共享默认 Key。
 
-- **GitHub 仓库地址**：`https://github.com/warrrm/chem-gemini`
-- **GitHub Pages 在线链接**：`https://warrrm.github.io/chem-gemini/`
+P1 使用独立的 `.github/workflows/p1-pages.yml`，只由 `p1-release` 分支推送或手动运行触发。流水线先验证本机版，再以 `npm run build:pages` 构建 `/chem-gemini/p1/` 静态版，测试后将 P0 的固定提交 `7915a15d368091937cbaf92a08ceac038dfa48d0` 原样构建到根目录，P1 只放入 `p1/`。两版一起发布，但源码、资源路径与网页地址彼此隔离，`main` 不合并 P1。
+
+旧的单版本 `Deploy to GitHub Pages` 工作流在新版成功上线后停用，防止只发布 P0 时误删 P1 路径。不要重新启用旧工作流发布；后续继续推送 `p1-release`。Pages 的 `github-pages` 环境需允许 `p1-release` 分支。
+
+静态版会明确提示自备 Key，并禁用“内置默认 Key”选项；“恢复默认参数”只恢复官方地址与模型，不声称线上存在密钥网关。站点根目录提供 `release-manifest.json`，记录两版提交及 P0 文件校验值。
+
+```bash
+npm run build:pages
+npm run test:pages
+npm run preview -- --mode pages --port 4186 --strictPort
+# http://127.0.0.1:4186/chem-gemini/p1/
+```
+
+- **GitHub 仓库**：<https://github.com/warrrm/chem-gemini>
+- **P1 网页**：<https://warrrm.github.io/chem-gemini/p1/>
+- **P0 网页（保留）**：<https://warrrm.github.io/chem-gemini/>
+
+## DeepSeek 官方依据
+
+- [Vision：图片输入格式与 deepseek-flash 支持](https://api-docs.deepseek.com/guides/vision/)
+- [更新日志：V4.1 Flash 发布及 API 模型名](https://api-docs.deepseek.com/updates/)
+- [Chat Completions：thinking 与 JSON 输出参数](https://api-docs.deepseek.com/api/create-chat-completion/)
+
+V4.1 Flash 使用滚动别名 `deepseek-flash`，会随官方更新指向最新 Flash 版本；不要虚构 `deepseek-v4.1-flash` 模型 ID。

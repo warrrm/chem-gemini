@@ -1470,7 +1470,13 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   margin-bottom: 12px;
+}
+
+.modal-header > button {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .modal-header h3 {
@@ -2028,40 +2034,6 @@ body {
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
   gap: 12px;
   margin-bottom: 12px;
-}
-
-.model-quick-chips,
-.modal-preset-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 6px;
-}
-
-.modal-preset-row {
-  margin-bottom: 12px;
-}
-
-.mini-chip {
-  padding: 3px 9px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: #ffffff;
-  color: var(--text-sub);
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.mini-chip:hover {
-  border-color: #93c5fd;
-  color: var(--primary);
-}
-
-.mini-chip.is-active {
-  background: var(--primary);
-  color: #ffffff;
-  border-color: var(--primary);
 }
 
 .ai-inline-footer {

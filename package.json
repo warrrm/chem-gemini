@@ -1,16 +1,20 @@
 {
   "name": "chem-gemini",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "化学识物小课堂 - 面向初中学生的中文化学互动学习网站",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
+    "build:pages": "tsc --noEmit && vite build --mode pages",
+    "assemble:pages": "tsx scripts/assemble-pages.ts",
     "preview": "vite preview",
     "validate:data": "tsx scripts/validate-data.ts",
     "test": "vitest run",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:pages": "playwright test --config playwright.pages.config.ts",
+    "test:live": "tsx scripts/smoke-deepseek.ts"
   },
   "dependencies": {
     "react": "^18.3.1",
@@ -18,6 +22,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.48.2",
+    "@types/node": "^22.20.5",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.3",
