@@ -933,6 +933,7 @@ export const App: React.FC = () => {
 
               {state.currentStep === 6 && confirmedSubstance && isFormulaUnlocked && (
                 <StepQuizPanel
+                  key={`${confirmedSubstance.id}:${state.edition}`}
                   substance={confirmedSubstance}
                   edition={state.edition}
                   teacherDelayReveal={

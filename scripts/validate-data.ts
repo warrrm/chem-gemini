@@ -5,6 +5,7 @@ import { parseChemicalFormula } from '../src/modules/formula/parser';
 import { computeElementMassRatio } from '../src/modules/knowledge/massRatio';
 import { getElementValenceClue } from '../src/modules/knowledge/formulaClues';
 import { getCalculationQuestions, gradeCalculationAnswer } from '../src/modules/quiz/calculations';
+import { getInquiriesForSubstance } from '../src/modules/quiz';
 
 const errors: string[] = [];
 
@@ -137,7 +138,10 @@ for (const sub of SUBSTANCES) {
   }
 }
 
+const quizIdsSet = new Set<string>();
 for (const q of ALL_QUIZZES) {
+  if (quizIdsSet.has(q.id)) fail(`题目 ID 重复：${q.id}`);
+  quizIdsSet.add(q.id);
   if (!SUBSTANCE_BY_ID.has(q.substanceId)) {
     fail(`Quiz [${q.id}] references unknown substanceId: ${q.substanceId}`);
   }
@@ -169,6 +173,13 @@ for (const q of ALL_QUIZZES) {
       }
     }
   } else if (q.type === 'inquiry') {
+    if (![q.title, q.scenario, q.reagentsAndApparatus].every(value => value.trim())) {
+      fail(`实验探究题 [${q.id}] 缺少标题、实验情境或仪器试剂`);
+    }
+    if (q.subQuestions.some(question => !question.prompt.trim() || !question.referenceAnswer.trim()
+      || !question.explanation.trim() || !question.scoringPoints.length || question.scoringPoints.some(point => !point.trim()))) {
+      fail(`实验探究题 [${q.id}] 缺少小题、参考答案、评分要点或解析`);
+    }
     if (q.subQuestions.length < 1 || q.subQuestions.length > 3) {
       fail(`Inquiry [${q.id}] must have 1-3 subQuestions, got ${q.subQuestions.length}`);
     }
@@ -189,6 +200,11 @@ for (const q of ALL_QUIZZES) {
 let calculationCount = 0;
 for (const sub of ALL_SUBSTANCES) {
   try {
+    for (const edition of sub.editions) {
+      if (getInquiriesForSubstance(sub.id, edition).length < 2) {
+        fail(`物质 [${sub.id}] 在 ${edition} 范围内的实验题不足两道，无法正常换题`);
+      }
+    }
     const clue = getElementValenceClue(sub);
     const parsed = parseChemicalFormula(sub.formula);
     if (parsed.ok && clue.elements.every(element => element.valences.length === 1)) {

@@ -56,6 +56,7 @@ export function getAtomicMassClue(substance: SubstanceEntry): string {
   return Object.keys(parsed.counts).map(symbol => `${symbol}=${RELATIVE_ATOMIC_MASS[symbol]}`).join('，');
 }
 
-export function getFormulaClueLevel(failedAttempts: number): 1 | 2 | 3 {
-  return failedAttempts >= 2 ? 3 : failedAttempts >= 1 ? 2 : 1;
+/** 答对后可回顾全部线索；尚未答对时按错误次数递进开放。 */
+export function getFormulaClueLevel(failedAttempts: number, isVerified = false): 1 | 2 | 3 {
+  return isVerified || failedAttempts >= 2 ? 3 : failedAttempts >= 1 ? 2 : 1;
 }

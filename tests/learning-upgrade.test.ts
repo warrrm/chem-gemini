@@ -13,7 +13,19 @@ const sub = (id: string) => SUBSTANCE_BY_ID.get(id)!;
 
 describe('按作答顺序开放线索', () => {
   it('先质量比，首次错误后化合价，再错误后微观图，最多三级', () => {
-    expect([0, 1, 2, 8].map(getFormulaClueLevel)).toEqual([1, 2, 3, 3]);
+    expect([0, 1, 2, 8].map(count => getFormulaClueLevel(count))).toEqual([1, 2, 3, 3]);
+  });
+
+  it('首次答对或纠错后答对均开放全部线索，导航和换物质按各自验证记录处理', () => {
+    for (const failures of [0, 1, 2]) {
+      let state = learningReducer(INITIAL_LEARNING_STATE, { type: 'CONFIRM_SUBSTANCE', substanceId: 'naoh' });
+      for (let index = 0; index < failures; index++) state = learningReducer(state, { type: 'FORMULA_ATTEMPT_FAILED', substanceId: 'naoh' });
+      state = learningReducer(state, { type: 'FORMULA_VERIFIED_SUCCESS', substanceId: 'naoh' });
+      state = learningReducer(state, { type: 'NAVIGATE_STEP', step: 3 });
+      expect(getFormulaClueLevel(state.formulaFailedAttempts.naoh ?? 0, state.formulaVerified.naoh)).toBe(3);
+      state = learningReducer(state, { type: 'CONFIRM_SUBSTANCE', substanceId: 'h2o' });
+      expect(getFormulaClueLevel(state.formulaFailedAttempts.h2o ?? 0, state.formulaVerified.h2o)).toBe(1);
+    }
   });
 
   it('保留返回页面时的线索进度，换物质或重置时清空', () => {

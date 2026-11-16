@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { SUBSTANCE_BY_ID } from '../data/substances';
 import { formatFormulaPreview } from '../modules/formula/parser';
 import {
   getInquiriesForSubstance,
+  getInquiryMatchKind,
   getMcqsForSubstance,
   pickNextQuestion,
 } from '../modules/quiz';
@@ -292,6 +294,12 @@ interface StepQuizPanelProps {
 }
 
 const OPTION_LETTERS = ['A', 'B', 'C', 'D'];
+const INQUIRY_SCOPE_NOTES = {
+  direct: '本物质探究题：与当前学习物质直接对应。',
+  component: '同成分探究题：主要成分或溶质相同，具体物态与实验条件以题目为准。',
+  related: '关联反应探究题：题目涉及当前物质的相关反应，实验对象与条件以题目为准。',
+  general: '同教材综合探究题：不是当前物质的专属实验，用于巩固实验探究方法。',
+};
 
 export const StepQuizPanel: React.FC<StepQuizPanelProps> = ({
   substance,
@@ -352,7 +360,9 @@ export const StepQuizPanel: React.FC<StepQuizPanelProps> = ({
     }
   };
 
-  const hasInquiry = inquiryPool.length > 0;
+  const activePool = quizMode === 'mcq' ? mcqPool : inquiryPool;
+  const activeQuestion = quizMode === 'mcq' ? currentMcq : currentInquiry;
+  const questionPosition = activeQuestion ? activePool.findIndex(question => question.id === activeQuestion.id) + 1 : 0;
 
   return (
     <section className="card step-card" aria-labelledby="step6-title">
@@ -367,6 +377,8 @@ export const StepQuizPanel: React.FC<StepQuizPanelProps> = ({
             <button
               type="button"
               role="tab"
+              id="quiz-tab-mcq"
+              aria-controls="quiz-panel-mcq"
               aria-selected={quizMode === 'mcq'}
               className={`clue-tab ${quizMode === 'mcq' ? 'is-active' : ''}`}
               onClick={() => setQuizMode('mcq')}
@@ -376,35 +388,36 @@ export const StepQuizPanel: React.FC<StepQuizPanelProps> = ({
             <button
               type="button"
               role="tab"
+              id="quiz-tab-inquiry"
+              aria-controls="quiz-panel-inquiry"
               aria-selected={quizMode === 'inquiry'}
-              disabled={!hasInquiry}
               className={`clue-tab ${quizMode === 'inquiry' ? 'is-active' : ''}`}
-              onClick={() => hasInquiry && setQuizMode('inquiry')}
-              title={
-                hasInquiry
-                  ? '切换到实验探究题'
-                  : '该物质暂未配置安全规范的实验探究题'
-              }
+              onClick={() => setQuizMode('inquiry')}
+              title="查看本物质、关联反应及同教材范围的实验探究题"
             >
               实验探究题
             </button>
           </div>
 
-          <button type="button" className="btn-secondary btn-sm" onClick={handleSwitchQuestion}>
+          <span className="quiz-question-count" role="status" data-testid="quiz-question-position">
+            {questionPosition} / {activePool.length} 题
+          </span>
+          <button type="button" className="btn-secondary btn-sm" onClick={handleSwitchQuestion}
+            disabled={activePool.length < 2} title={activePool.length < 2 ? '当前题型不足两道题，暂不能换题' : '切换当前题型的下一道题'}>
             换一道题
           </button>
         </div>
       </div>
 
-      {!hasInquiry && (
+      {inquiryPool.length === 0 && (
         <p className="inquiry-disabled-note">
-          说明：当前物质暂未配置适合中学生操作的实验探究题，已为你提供精选单项选择题。
+          当前教材范围暂无实验探究题，可先完成选择题与计算题，或切换教材范围后重新查看。
         </p>
       )}
 
       {/* 单项选择题视图 */}
       {quizMode === 'mcq' && (
-        <div className="quiz-body">
+        <div className="quiz-body" id="quiz-panel-mcq" role="tabpanel" aria-labelledby="quiz-tab-mcq">
           {!currentMcq ? (
             <div className="status-banner is-warn">当前版本下暂无匹配的选择题。</div>
           ) : (
@@ -506,9 +519,16 @@ export const StepQuizPanel: React.FC<StepQuizPanelProps> = ({
       )}
 
       {/* 实验探究题视图 */}
-      {quizMode === 'inquiry' && currentInquiry && (
-        <div className="quiz-body">
-          <div className="inquiry-header-card">
+      {quizMode === 'inquiry' && (
+        <div className="quiz-body" id="quiz-panel-inquiry" role="tabpanel" aria-labelledby="quiz-tab-inquiry">
+          {!currentInquiry ? <div className="status-banner is-warn" role="status">
+            当前教材范围暂无可用的实验探究题，请切换教材范围或选择单项选择题。
+          </div> : <>
+          <p className="inquiry-scope-note" data-testid="inquiry-scope-note">
+            {INQUIRY_SCOPE_NOTES[getInquiryMatchKind(currentInquiry, substance.id)]}
+            本题主题：{SUBSTANCE_BY_ID.get(currentInquiry.substanceId)?.name}。实际实验须在教师指导的实验室中进行。
+          </p>
+          <div className="inquiry-header-card" data-testid="inquiry-question" data-question-id={currentInquiry.id}>
             <h3>{currentInquiry.title}</h3>
             <p className="inquiry-scenario">
               <strong>实验情境：</strong>
@@ -590,6 +610,7 @@ export const StepQuizPanel: React.FC<StepQuizPanelProps> = ({
               </div>
             )
           )}
+          </>}
         </div>
       )}
 

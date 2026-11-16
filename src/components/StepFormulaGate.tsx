@@ -32,7 +32,7 @@ export const StepFormulaGate: React.FC<StepFormulaGateProps> = ({
   const hasMassRatio = substance.massRatio !== null && substance.massRatio.length > 0;
   const [formulaInput, setFormulaInput] = useState('');
   const [feedback, setFeedback] = useState<{ valid: boolean; text: string } | null>(null);
-  const clueLevel = getFormulaClueLevel(failedAttempts);
+  const clueLevel = getFormulaClueLevel(failedAttempts, isAlreadyVerified);
   const valenceClue = clueLevel >= 2 ? getElementValenceClue(substance) : null;
 
   useEffect(() => {
@@ -80,7 +80,9 @@ export const StepFormulaGate: React.FC<StepFormulaGateProps> = ({
       <p className="target-instruction">{targetComponentLabel}</p>
 
       <p className="clue-progress-note" role="status" data-testid="formula-clue-progress">
-        当前已开放 {clueLevel} / 3 条线索。先根据已有线索作答；首次答错后开放线索2，再答错后开放线索3。空白提交不开放新线索。
+        当前已开放 {clueLevel} / 3 条线索。{isAlreadyVerified
+          ? '本关已解锁，三条线索全部开放，可回顾完整推导过程。'
+          : '先根据已有线索作答；首次答错后开放线索2，再答错后开放线索3；答对后全部开放。空白提交不开放新线索。'}
       </p>
       <div className="progressive-clues" aria-label="化学式逐步推导线索">
         <section className="clue-panel" aria-labelledby="mass-clue-title" data-testid="formula-clue-mass">
@@ -104,14 +106,14 @@ export const StepFormulaGate: React.FC<StepFormulaGateProps> = ({
           </span>)}</div>
           <p className="mass-ratio-note">{valenceClue.note}</p>
         </section> : <div className="clue-locked" data-testid="formula-clue-valence-locked">
-          <strong>线索2：元素与化合价</strong><span>首次作答错误后开放</span>
+          <strong>线索2：元素与化合价</strong><span>首次答错或答对后开放</span>
         </div>}
 
         {clueLevel >= 3 ? <section className="clue-panel" aria-labelledby="micro-clue-title" data-testid="formula-clue-micro">
           <h3 id="micro-clue-title">线索3：微观示意图</h3>
           <MicroDiagramSvg composition={substance.composition} />
         </section> : <div className="clue-locked" data-testid="formula-clue-micro-locked">
-          <strong>线索3：微观示意图</strong><span>结合线索2再次作答错误后开放</span>
+          <strong>线索3：微观示意图</strong><span>再次答错或答对后开放</span>
         </div>}
       </div>
 
