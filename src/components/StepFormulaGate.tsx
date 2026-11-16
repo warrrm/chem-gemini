@@ -2,12 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { formatFormulaPreview } from '../modules/formula/parser';
 import { validateUserFormula } from '../modules/formula/validator';
 import { formatMassRatioText } from '../modules/knowledge/massRatio';
+import { formatValence, getAtomicMassClue, getElementValenceClue, getFormulaClueLevel } from '../modules/knowledge/formulaClues';
 import { SubstanceEntry } from '../types/chemistry';
 import { MicroDiagramSvg } from './MicroDiagramSvg';
 
 interface StepFormulaGateProps {
   substance: SubstanceEntry;
   isAlreadyVerified: boolean;
+  failedAttempts: number;
+  onIncorrectAttempt: (substanceId: string) => void;
   teacherModeEnabled?: boolean;
   onVerifiedSuccess: (substanceId: string) => void;
   onTeacherForceUnlock?: (substanceId: string) => void;
@@ -19,23 +22,22 @@ const SUBSCRIPT_BUTTONS = ['2', '3', '4', '(', ')'];
 export const StepFormulaGate: React.FC<StepFormulaGateProps> = ({
   substance,
   isAlreadyVerified,
+  failedAttempts,
+  onIncorrectAttempt,
   teacherModeEnabled = false,
   onVerifiedSuccess,
   onTeacherForceUnlock,
   onContinueToCards,
 }) => {
   const hasMassRatio = substance.massRatio !== null && substance.massRatio.length > 0;
-  const [clueTab, setClueTab] = useState<'micro' | 'mass'>('micro');
   const [formulaInput, setFormulaInput] = useState('');
   const [feedback, setFeedback] = useState<{ valid: boolean; text: string } | null>(null);
-  const [hintLevel, setHintLevel] = useState<0 | 1 | 2 | 3>(0);
+  const clueLevel = getFormulaClueLevel(failedAttempts);
+  const valenceClue = clueLevel >= 2 ? getElementValenceClue(substance) : null;
 
-  // Reset input & hints whenever substance changes
   useEffect(() => {
-    setClueTab('micro');
     setFormulaInput('');
     setFeedback(null);
-    setHintLevel(0);
   }, [substance.id]);
 
   const handleAppendToken = (token: string) => {
@@ -48,11 +50,9 @@ export const StepFormulaGate: React.FC<StepFormulaGateProps> = ({
     setFeedback({ valid: res.valid, text: res.feedback });
     if (res.valid) {
       onVerifiedSuccess(substance.id);
+    } else if (formulaInput.trim() && !isAlreadyVerified) {
+      onIncorrectAttempt(substance.id);
     }
-  };
-
-  const handleRevealNextHint = () => {
-    setHintLevel((prev) => (prev < 3 ? ((prev + 1) as 1 | 2 | 3) : 3));
   };
 
   const isMixtureOrSolution = substance.kind === 'mixture' || substance.kind === 'solution';
@@ -79,53 +79,40 @@ export const StepFormulaGate: React.FC<StepFormulaGateProps> = ({
 
       <p className="target-instruction">{targetComponentLabel}</p>
 
-      {/* 线索切换区：微观示意图 / 元素质量比 */}
-      <div className="clue-panel">
-        <div className="clue-tabs" role="tablist" aria-label="化学式推导线索">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={clueTab === 'micro'}
-            className={`clue-tab ${clueTab === 'micro' ? 'is-active' : ''}`}
-            onClick={() => setClueTab('micro')}
-          >
-            线索一：微观构成示意图
-          </button>
-          {hasMassRatio ? (
-            <button
-              type="button"
-              role="tab"
-              aria-selected={clueTab === 'mass'}
-              className={`clue-tab ${clueTab === 'mass' ? 'is-active' : ''}`}
-              onClick={() => setClueTab('mass')}
-            >
-              线索二：元素质量比
-            </button>
-          ) : (
-            <span className="clue-tab-disabled" title="单质只含一种元素，无元素质量比">
-              单质只含一种元素（仅提供微观示意图）
-            </span>
-          )}
-        </div>
-
-        {clueTab === 'micro' && <MicroDiagramSvg composition={substance.composition} />}
-
-        {clueTab === 'mass' && hasMassRatio && substance.massRatio && (
-          <div className="mass-ratio-card">
+      <p className="clue-progress-note" role="status" data-testid="formula-clue-progress">
+        当前已开放 {clueLevel} / 3 条线索。先根据已有线索作答；首次答错后开放线索2，再答错后开放线索3。空白提交不开放新线索。
+      </p>
+      <div className="progressive-clues" aria-label="化学式逐步推导线索">
+        <section className="clue-panel" aria-labelledby="mass-clue-title" data-testid="formula-clue-mass">
+          <h3 id="mass-clue-title">线索1：元素质量比</h3>
+          {hasMassRatio && substance.massRatio ? <div className="mass-ratio-card">
             <div className="mass-ratio-title">各元素质量比（最简整数比）</div>
             <div className="mass-ratio-formula">{formatMassRatioText(substance.massRatio)}</div>
-            <div className="mass-ratio-detail">
-              {substance.massRatio.map((item) => (
-                <span key={item.symbol} className="mass-chip">
-                  {item.name}（{item.symbol}）：{item.ratioValue}
-                </span>
-              ))}
-            </div>
-            <p className="mass-ratio-note">
-              提示：结合常用相对原子质量（H=1, C=12, N=14, O=16, Na=23, Mg=24, S=32, Cl=35.5, K=39, Ca=40, Mn=55, Fe=56, Cu=64, Zn=65）可推算原子个数比。
-            </p>
-          </div>
-        )}
+            <div className="mass-ratio-detail">{substance.massRatio.map(item => (
+              <span key={item.symbol} className="mass-chip">{item.name}（{item.symbol}）：{item.ratioValue}</span>
+            ))}</div>
+          </div> : <p>
+            该物质属于单质，只含一种元素，不存在不同元素之间的质量比；该元素在纯净物中的质量分数为 100%。
+          </p>}
+          <p className="mass-ratio-note">常用相对原子质量：{getAtomicMassClue(substance)}。可先用各元素质量除以相对原子质量，再化简得到原子个数比。</p>
+        </section>
+
+        {valenceClue ? <section className="clue-panel" aria-labelledby="valence-clue-title" data-testid="formula-clue-valence">
+          <h3 id="valence-clue-title">线索2：元素与化合价</h3>
+          <div className="mass-ratio-detail">{valenceClue.elements.map(element => <span className="mass-chip" key={element.symbol}>
+            {element.name}（{element.symbol}）：{element.valences.map(formatValence).join('、')} 价
+          </span>)}</div>
+          <p className="mass-ratio-note">{valenceClue.note}</p>
+        </section> : <div className="clue-locked" data-testid="formula-clue-valence-locked">
+          <strong>线索2：元素与化合价</strong><span>首次作答错误后开放</span>
+        </div>}
+
+        {clueLevel >= 3 ? <section className="clue-panel" aria-labelledby="micro-clue-title" data-testid="formula-clue-micro">
+          <h3 id="micro-clue-title">线索3：微观示意图</h3>
+          <MicroDiagramSvg composition={substance.composition} />
+        </section> : <div className="clue-locked" data-testid="formula-clue-micro-locked">
+          <strong>线索3：微观示意图</strong><span>结合线索2再次作答错误后开放</span>
+        </div>}
       </div>
 
       {/* 化学式输入表单 */}
@@ -145,8 +132,8 @@ export const StepFormulaGate: React.FC<StepFormulaGateProps> = ({
             onChange={(e) => setFormulaInput(e.target.value)}
             placeholder={
               isMixtureOrSolution
-                ? `输入${substance.mainComponentName ?? '主要成分'}化学式，如 CaCO3`
-                : '输入化学式，如 H2O、NaOH、Ca(OH)2'
+                ? `输入${substance.mainComponentName ?? '主要成分'}的化学式`
+                : '根据已开放线索填写化学式'
             }
             className="formula-input"
             autoComplete="off"
@@ -193,51 +180,12 @@ export const StepFormulaGate: React.FC<StepFormulaGateProps> = ({
         </div>
       )}
 
-      {/* 分级提示（共 3 级，绝不直接给出答案字符串） */}
-      <div className="hints-section">
-        <div className="hints-header">
-          <button
-            type="button"
-            className="btn-secondary btn-sm"
-            onClick={handleRevealNextHint}
-            disabled={hintLevel >= 3}
-          >
-            {hintLevel === 0
-              ? '查看提示（第 1 级：元素组成）'
-              : hintLevel === 1
-              ? '继续看提示（第 2 级：原子个数比）'
-              : hintLevel === 2
-              ? '继续看提示（第 3 级：化合价交叉步骤）'
-              : '已展开全部 3 级提示'}
-          </button>
-          <div className="action-row">
-            {teacherModeEnabled && !isAlreadyVerified && onTeacherForceUnlock && (
-              <button
-                type="button"
-                className="btn-teacher btn-sm"
-                onClick={() => onTeacherForceUnlock(substance.id)}
-              >
-                教师演示控制：直接解锁展示
-              </button>
-            )}
-            {isAlreadyVerified && (
-              <button type="button" className="btn-primary btn-sm" onClick={onContinueToCards}>
-                查看已解锁的知识卡片 →
-              </button>
-            )}
-          </div>
-        </div>
-
-        {hintLevel > 0 && (
-          <ol className="hint-list">
-            {substance.hints.slice(0, hintLevel).map((h, i) => (
-              <li key={i} className="hint-item">
-                <strong>提示 {i + 1}：</strong>
-                {h}
-              </li>
-            ))}
-          </ol>
-        )}
+      <div className="action-row">
+        {teacherModeEnabled && !isAlreadyVerified && onTeacherForceUnlock && <button type="button" className="btn-teacher btn-sm"
+          onClick={() => onTeacherForceUnlock(substance.id)}>教师演示控制：直接解锁展示</button>}
+        {isAlreadyVerified && <button type="button" className="btn-primary btn-sm" onClick={onContinueToCards}>
+          查看已解锁的知识卡片 →
+        </button>}
       </div>
     </section>
   );

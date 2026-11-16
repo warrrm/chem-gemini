@@ -58,8 +58,9 @@ test.describe('化学识物小课堂 — 5 大必测验收场景 (Section 11)', 
     await page.getByRole('button', { name: '搜索名称' }).click();
     await page.getByRole('button', { name: /水（蒸馏水\/纯水）.*确认此物质/ }).click();
 
-    await page.getByRole('tab', { name: '线索二：元素质量比' }).click();
-    await expect(page.locator('main')).toContainText('m(H) : m(O) = 1 : 8');
+    await expect(page.getByTestId('formula-clue-mass')).toContainText('m(H) : m(O) = 1 : 8');
+    await expect(page.getByTestId('formula-clue-valence')).toHaveCount(0);
+    await expect(page.getByTestId('formula-clue-micro')).toHaveCount(0);
 
     await page.locator('#formula-input').fill('H2O');
     await page.getByRole('button', { name: '提交校验并解锁' }).click();

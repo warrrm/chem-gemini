@@ -35,6 +35,8 @@ export interface LearningState {
 
   /** 化学式书写与解锁记录（按 substanceId 隔离） */
   formulaVerified: Record<string, boolean>;
+  /** 已记录的错误作答次数，最多记两次；切换页面时保留已开放线索。 */
+  formulaFailedAttempts: Record<string, number>;
 }
 
 export const INITIAL_LEARNING_STATE: LearningState = {
@@ -59,6 +61,7 @@ export const INITIAL_LEARNING_STATE: LearningState = {
   apparatusNotice: null,
   confirmedSubstanceId: null,
   formulaVerified: {},
+  formulaFailedAttempts: {},
 };
 
 export type LearningAction =
@@ -78,6 +81,7 @@ export type LearningAction =
   | { type: 'SELECT_HOTSPOT'; hotspot: SampleHotspot }
   | { type: 'CONFIRM_SUBSTANCE'; substanceId: string }
   | { type: 'FORMULA_VERIFIED_SUCCESS'; substanceId: string }
+  | { type: 'FORMULA_ATTEMPT_FAILED'; substanceId: string }
   | { type: 'TEACHER_FORCE_UNLOCK'; substanceId: string }
   | { type: 'NAVIGATE_STEP'; step: LearningStep }
   | { type: 'CLEAR_GUARD_NOTICE' }
@@ -144,6 +148,7 @@ export function learningReducer(state: LearningState, action: LearningAction): L
         apparatusNotice: null,
         confirmedSubstanceId: null,
         formulaVerified: {},
+        formulaFailedAttempts: {},
       };
 
     case 'RECOGNITION_DONE': {
@@ -167,6 +172,7 @@ export function learningReducer(state: LearningState, action: LearningAction): L
         apparatusNotice: null,
         confirmedSubstanceId: null,
         formulaVerified: {},
+        formulaFailedAttempts: {},
       };
     }
 
@@ -201,6 +207,7 @@ export function learningReducer(state: LearningState, action: LearningAction): L
         statusMessage: null,
         confirmedSubstanceId: null,
         formulaVerified: {},
+        formulaFailedAttempts: {},
       };
     }
 
@@ -209,10 +216,21 @@ export function learningReducer(state: LearningState, action: LearningAction): L
         ...state,
         confirmedSubstanceId: action.substanceId,
         formulaVerified: {},
+        formulaFailedAttempts: {},
         currentStep: 3,
         systemStatus: 'waiting_formula',
         statusMessage: null,
         guardNotice: null,
+      };
+
+    case 'FORMULA_ATTEMPT_FAILED':
+      if (state.confirmedSubstanceId !== action.substanceId || state.currentStep !== 3 || state.formulaVerified[action.substanceId]) return state;
+      return {
+        ...state,
+        formulaFailedAttempts: {
+          ...state.formulaFailedAttempts,
+          [action.substanceId]: Math.min(2, (state.formulaFailedAttempts[action.substanceId] ?? 0) + 1),
+        },
       };
 
     case 'FORMULA_VERIFIED_SUCCESS':

@@ -104,7 +104,7 @@ export function validateUserFormula(
     return {
       valid: false,
       errorCode: 'WRONG_ELEMENTS',
-      feedback: '元素种类不对，再想想该物质由哪几种元素组成（可查看上方线索或点击“查看提示”）。',
+      feedback: '元素种类不对，再想想该物质由哪几种元素组成，请查看上方已开放的线索。',
     };
   }
 

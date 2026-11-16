@@ -130,7 +130,23 @@ export interface InquiryQuestion {
   subQuestions: InquirySubQuestion[];
 }
 
-export type QuizQuestion = McqQuestion | InquiryQuestion;
+export interface CalculationQuestion {
+  id: string;
+  type: 'calculation';
+  substanceId: string;
+  kind: 'relative_mass' | 'mass_fraction' | 'element_mass' | 'reaction_mass';
+  title: string;
+  stem: string;
+  atomicMasses: string;
+  unit: '' | '%' | 'g';
+  answer: number;
+  decimalPlaces: number;
+  steps: string[];
+  reactionIds: string[];
+  equation?: string;
+}
+
+export type QuizQuestion = McqQuestion | InquiryQuestion | CalculationQuestion;
 
 export interface SampleHotspot {
   id: string;

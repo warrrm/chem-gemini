@@ -1,5 +1,5 @@
 import React from 'react';
-import { buildMicroLegend, getAtomStyle } from '../modules/knowledge/microDiagram';
+import { buildMicroLegend, getAtomStyle, getMicroAtomCharge } from '../modules/knowledge/microDiagram';
 import { SubstanceComposition } from '../types/chemistry';
 
 interface MicroDiagramSvgProps {
@@ -14,7 +14,7 @@ export const MicroDiagramSvg: React.FC<MicroDiagramSvgProps> = ({ composition })
     for (let i = 0; i < spec.count; i++) {
       nodes.push({
         symbol: spec.symbol,
-        charge: spec.charge,
+        charge: getMicroAtomCharge(spec, composition),
         role: spec.role,
         key: `${spec.symbol}-${idx}-${i}`,
       });
@@ -50,6 +50,9 @@ export const MicroDiagramSvg: React.FC<MicroDiagramSvgProps> = ({ composition })
         )}
       </svg>
 
+      {composition.atoms.some(atom => atom.charge && !getMicroAtomCharge(atom, composition)) && <p className="mass-ratio-note">
+        多原子离子在此只示意原子种类和数量；原子团电荷属于整体，不标在单个原子上。
+      </p>}
       <div className="micro-legend" aria-label="微观粒子图例">
         {legend.map((item) => (
           <div key={item.label} className="micro-legend-item">

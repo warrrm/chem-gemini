@@ -1,7 +1,7 @@
 {
   "name": "chem-gemini",
   "private": true,
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "化学识物小课堂 - 面向初中学生的中文化学互动学习网站",
   "type": "module",
   "scripts": {

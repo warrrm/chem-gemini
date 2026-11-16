@@ -3,6 +3,8 @@ import { REACTIONS } from '../src/data/reactions';
 import { ALL_SUBSTANCES, SUBSTANCES, SUBSTANCE_BY_ID } from '../src/data/substances';
 import { parseChemicalFormula } from '../src/modules/formula/parser';
 import { computeElementMassRatio } from '../src/modules/knowledge/massRatio';
+import { getElementValenceClue } from '../src/modules/knowledge/formulaClues';
+import { getCalculationQuestions, gradeCalculationAnswer } from '../src/modules/quiz/calculations';
 
 const errors: string[] = [];
 
@@ -166,7 +168,7 @@ for (const q of ALL_QUIZZES) {
         fail(`MCQ [${q.id}] contains banned unsafe phrase: "${banned}"`);
       }
     }
-  } else {
+  } else if (q.type === 'inquiry') {
     if (q.subQuestions.length < 1 || q.subQuestions.length > 3) {
       fail(`Inquiry [${q.id}] must have 1-3 subQuestions, got ${q.subQuestions.length}`);
     }
@@ -184,6 +186,29 @@ for (const q of ALL_QUIZZES) {
   }
 }
 
+let calculationCount = 0;
+for (const sub of ALL_SUBSTANCES) {
+  try {
+    const clue = getElementValenceClue(sub);
+    const parsed = parseChemicalFormula(sub.formula);
+    if (parsed.ok && clue.elements.every(element => element.valences.length === 1)) {
+      const total = clue.elements.reduce((sum, element) => sum + element.valences[0] * parsed.counts[element.symbol], 0);
+      if (total !== 0) fail(`物质 [${sub.id}] 的化合价不满足代数和为零`);
+    }
+    const calculations = getCalculationQuestions(sub, '通用版');
+    calculationCount += calculations.length;
+    if (!calculations.length) fail(`物质 [${sub.id}] 未生成计算题`);
+    for (const question of calculations) {
+      if (!Number.isFinite(question.answer) || question.answer <= 0) fail(`计算题 [${question.id}] 答案无效`);
+      if (!gradeCalculationAnswer(String(question.answer), question).correct) fail(`计算题 [${question.id}] 无法校验标准答案`);
+      if (!question.steps.length || !question.atomicMasses) fail(`计算题 [${question.id}] 缺少解题过程或原子质量依据`);
+      if (question.reactionIds.some(id => !reactionIdsSet.has(id))) fail(`计算题 [${question.id}] 引用未知反应`);
+    }
+  } catch (error) {
+    fail(`物质 [${sub.id}] 的线索或计算题无效：${error instanceof Error ? error.message : '未知错误'}`);
+  }
+}
+
 if (errors.length > 0) {
   console.error('Data validation failed with the following errors:');
   for (const err of errors) {
@@ -193,5 +218,5 @@ if (errors.length > 0) {
 }
 
 console.log(
-  `Data validation passed! (${SUBSTANCES.length} core substances, ${ALL_SUBSTANCES.length} total substances, ${REACTIONS.length} reactions, ${MCQ_QUESTIONS.length} MCQs, ${INQUIRY_QUESTIONS.length} inquiry questions)`
+  `Data validation passed! (${SUBSTANCES.length} core substances, ${ALL_SUBSTANCES.length} total substances, ${REACTIONS.length} reactions, ${MCQ_QUESTIONS.length} MCQs, ${INQUIRY_QUESTIONS.length} inquiry questions, ${calculationCount} generated calculation templates)`
 );

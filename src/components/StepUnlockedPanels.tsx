@@ -8,6 +8,7 @@ import {
 import { FormattedReaction, queryReactionsForSubstance } from '../modules/reactions';
 import { InquiryQuestion, McqQuestion, SubstanceEntry, TextbookEdition } from '../types/chemistry';
 import { ApparatusDiagram } from './ApparatusDiagram';
+import { CalculationQuestionCard } from './CalculationQuestionCard';
 
 /* ==================== Step 4: 物质知识卡片 ==================== */
 interface StepKnowledgeCardProps {
@@ -591,6 +592,8 @@ export const StepQuizPanel: React.FC<StepQuizPanelProps> = ({
           )}
         </div>
       )}
+
+      <CalculationQuestionCard key={`${substance.id}:${edition}`} substance={substance} edition={edition} teacherDelayReveal={teacherDelayReveal} />
 
       <div className="step-nav-footer">
         <button type="button" className="btn-secondary" onClick={onRestartFlow}>

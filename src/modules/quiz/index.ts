@@ -42,7 +42,6 @@ export function pickNextQuestion<T extends { id: string }>(
   if (pool.length === 0) return null;
   if (pool.length === 1) return pool[0];
 
-  const candidates = currentId ? pool.filter((item) => item.id !== currentId) : pool;
-  if (candidates.length === 0) return pool[0];
-  return candidates[0];
+  const currentIndex = currentId ? pool.findIndex(item => item.id === currentId) : -1;
+  return pool[(currentIndex + 1) % pool.length];
 }

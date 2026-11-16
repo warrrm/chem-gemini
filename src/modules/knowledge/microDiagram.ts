@@ -44,6 +44,12 @@ export interface MicroLegendItem {
   textColor: string;
 }
 
+/** 原子团的整体电荷不能错误地标在中心原子或羟基中的氧原子上。 */
+export function getMicroAtomCharge(atom: SubstanceComposition['atoms'][number], composition: SubstanceComposition): string | undefined {
+  if (atom.role === 'center' || (atom.symbol === 'O' && composition.atoms.some(item => item.symbol === 'H' && item.role === 'ligand'))) return undefined;
+  return atom.charge;
+}
+
 /**
  * 构建微观示意图图例（只显示单个元素/离子符号及名称，绝不出现目标化学式字符串）
  */
@@ -52,16 +58,17 @@ export function buildMicroLegend(composition: SubstanceComposition): MicroLegend
   const legend: MicroLegendItem[] = [];
 
   for (const atom of composition.atoms) {
-    const key = `${atom.symbol}|${atom.charge ?? ''}`;
+    const charge = getMicroAtomCharge(atom, composition);
+    const key = `${atom.symbol}|${charge ?? ''}`;
     if (seen.has(key)) continue;
     seen.add(key);
 
     const style = getAtomStyle(atom.symbol);
     const cnName = ELEMENT_CHINESE_NAMES[atom.symbol] ?? atom.symbol;
     const particleType =
-      atom.charge && atom.charge.includes('+')
+      charge && charge.includes('+')
         ? '阳离子'
-        : atom.charge && atom.charge.includes('-')
+        : charge && charge.includes('-')
         ? '阴离子'
         : '原子';
 

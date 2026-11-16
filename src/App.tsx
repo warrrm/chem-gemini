@@ -901,6 +901,8 @@ export const App: React.FC = () => {
                 <StepFormulaGate
                   substance={confirmedSubstance}
                   isAlreadyVerified={isFormulaUnlocked}
+                  failedAttempts={state.formulaFailedAttempts[confirmedSubstance.id] ?? 0}
+                  onIncorrectAttempt={(id) => dispatch({ type: 'FORMULA_ATTEMPT_FAILED', substanceId: id })}
                   teacherModeEnabled={state.teacherMode.enabled}
                   onVerifiedSuccess={(id) =>
                     dispatch({ type: 'FORMULA_VERIFIED_SUCCESS', substanceId: id })
