@@ -1,31 +1,18 @@
-import React, { useMemo, useState } from 'react';
-import { getCalculationQuestions, gradeCalculationAnswer } from '../modules/quiz/calculations';
-import { SubstanceEntry, TextbookEdition } from '../types/chemistry';
+import React, { useState } from 'react';
+import { gradeCalculationAnswer } from '../modules/quiz/calculations';
+import { CalculationQuestion } from '../types/chemistry';
 
 interface Props {
-  substance: SubstanceEntry;
-  edition: TextbookEdition;
+  question: CalculationQuestion;
   teacherDelayReveal: boolean;
 }
 
-/** 步骤六额外呈现一道计算题，不替换原有选择题与探究题。父组件按物质和教材重建本组件。 */
-export const CalculationQuestionCard: React.FC<Props> = ({ substance, edition, teacherDelayReveal }) => {
-  const pool = useMemo(() => getCalculationQuestions(substance, edition), [substance, edition]);
-  const [index, setIndex] = useState(0);
+/** 计算题与其他题型共用换题控件；换题时父组件按题目 ID 重置这份作答。 */
+export const CalculationQuestionCard: React.FC<Props> = ({ question, teacherDelayReveal }) => {
   const [answer, setAnswer] = useState('');
   const [feedback, setFeedback] = useState<ReturnType<typeof gradeCalculationAnswer> | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [revealed, setRevealed] = useState(false);
-  const question = pool[index % pool.length];
-  if (!question) return <div className="status-banner is-warn">当前教材范围暂无匹配的计算题。</div>;
-
-  const nextQuestion = () => {
-    setIndex(previous => (previous + 1) % pool.length);
-    setAnswer('');
-    setFeedback(null);
-    setSubmitted(false);
-    setRevealed(false);
-  };
 
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -40,12 +27,7 @@ export const CalculationQuestionCard: React.FC<Props> = ({ substance, edition, t
 
   return (
     <section className="calculation-card" aria-labelledby="calculation-title" data-testid="calculation-card">
-      <div className="step-header-row">
-        <h3 id="calculation-title">计算题 · {question.title}</h3>
-        <button type="button" className="btn-secondary btn-sm" onClick={nextQuestion} disabled={pool.length < 2}>
-          换一道计算题
-        </button>
-      </div>
+      <h3 id="calculation-title">{question.title}</h3>
       <p className="quiz-stem" data-testid="calculation-stem">{question.stem}</p>
       {question.equation && <p className="calculation-equation">{question.equation}</p>}
       <p className="mass-ratio-note">本题采用的相对原子质量：{question.atomicMasses}。</p>

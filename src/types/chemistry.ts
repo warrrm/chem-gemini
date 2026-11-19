@@ -1,3 +1,5 @@
+import { SubstanceComposition } from './microstructure';
+
 export type TextbookEdition = '通用版' | '人教版' | '沪教版' | '鲁教版';
 
 export type SubstanceKind = 'pure' | 'mixture' | 'solution';
@@ -10,22 +12,6 @@ export type SubstanceCategory =
   | '盐'
   | '有机化合物'
   | '混合物';
-
-export type MicroStructureType = 'molecule' | 'ionic' | 'metallic' | 'network_atom';
-
-export interface MicroAtomSpec {
-  symbol: string;
-  count: number;
-  charge?: string;
-  role?: 'center' | 'ligand' | 'cation' | 'anion' | 'lattice';
-}
-
-export interface SubstanceComposition {
-  structureType: MicroStructureType;
-  /** 描述构成微粒数量关系，严禁出现化学式字符串 */
-  unitDescription: string;
-  atoms: MicroAtomSpec[];
-}
 
 export interface MassRatioItem {
   symbol: string;

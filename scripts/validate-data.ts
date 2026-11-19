@@ -6,6 +6,7 @@ import { computeElementMassRatio } from '../src/modules/knowledge/massRatio';
 import { getElementValenceClue } from '../src/modules/knowledge/formulaClues';
 import { getCalculationQuestions, gradeCalculationAnswer } from '../src/modules/quiz/calculations';
 import { getInquiriesForSubstance } from '../src/modules/quiz';
+import { validateMicroStructure } from './validate-microstructure';
 
 const errors: string[] = [];
 
@@ -51,10 +52,8 @@ for (const sub of ALL_SUBSTANCES) {
         fail(`Spoiler leak in substance [${sub.id}] hint: contains "${sub.formula}"`);
       }
     }
-    if (sub.composition.unitDescription.includes(sub.formula)) {
-      fail(`Spoiler leak in substance [${sub.id}] unitDescription: contains "${sub.formula}"`);
-    }
   }
+  for (const problem of validateMicroStructure(sub)) fail(`物质 [${sub.id}] 的微观图：${problem}`);
 }
 
 const reactionIdsSet = new Set<string>();

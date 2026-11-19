@@ -7,8 +7,9 @@ import {
   getMcqsForSubstance,
   pickNextQuestion,
 } from '../modules/quiz';
+import { getCalculationQuestions } from '../modules/quiz/calculations';
 import { FormattedReaction, queryReactionsForSubstance } from '../modules/reactions';
-import { InquiryQuestion, McqQuestion, SubstanceEntry, TextbookEdition } from '../types/chemistry';
+import { SubstanceEntry, TextbookEdition } from '../types/chemistry';
 import { ApparatusDiagram } from './ApparatusDiagram';
 import { CalculationQuestionCard } from './CalculationQuestionCard';
 
@@ -294,6 +295,12 @@ interface StepQuizPanelProps {
 }
 
 const OPTION_LETTERS = ['A', 'B', 'C', 'D'];
+const QUIZ_TYPES = [
+  { id: 'mcq', label: '单项选择题' },
+  { id: 'inquiry', label: '实验探究题' },
+  { id: 'calculation', label: '计算题' },
+] as const;
+type QuizMode = (typeof QUIZ_TYPES)[number]['id'];
 const INQUIRY_SCOPE_NOTES = {
   direct: '本物质探究题：与当前学习物质直接对应。',
   component: '同成分探究题：主要成分或溶质相同，具体物态与实验条件以题目为准。',
@@ -316,9 +323,13 @@ export const StepQuizPanel: React.FC<StepQuizPanelProps> = ({
     [substance.id, edition]
   );
 
-  const [quizMode, setQuizMode] = useState<'mcq' | 'inquiry'>('mcq');
-  const [currentMcq, setCurrentMcq] = useState<McqQuestion | null>(null);
-  const [currentInquiry, setCurrentInquiry] = useState<InquiryQuestion | null>(null);
+  const calculationPool = useMemo(() => getCalculationQuestions(substance, edition), [substance, edition]);
+
+  // 父组件按物质和教材重新挂载此面板，各题型在本次练习中独立保存进度。
+  const [quizMode, setQuizMode] = useState<QuizMode>('mcq');
+  const [currentMcq, setCurrentMcq] = useState(() => pickNextQuestion(mcqPool));
+  const [currentInquiry, setCurrentInquiry] = useState(() => pickNextQuestion(inquiryPool));
+  const [currentCalculation, setCurrentCalculation] = useState(() => pickNextQuestion(calculationPool));
 
   // MCQ answer state
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
@@ -330,39 +341,42 @@ export const StepQuizPanel: React.FC<StepQuizPanelProps> = ({
   const [inquirySubmitted, setInquirySubmitted] = useState(false);
   const [inquiryAnswerRevealed, setInquiryAnswerRevealed] = useState(false);
 
-  useEffect(() => {
-    setQuizMode('mcq');
-    const firstMcq = pickNextQuestion(mcqPool);
-    const firstInq = pickNextQuestion(inquiryPool);
-    setCurrentMcq(firstMcq);
-    setCurrentInquiry(firstInq);
-    setSelectedOption(null);
-    setMcqSubmitted(false);
-    setMcqExplanationRevealed(false);
-    setInquiryAnswers(firstInq ? firstInq.subQuestions.map(() => '') : []);
-    setInquirySubmitted(false);
-    setInquiryAnswerRevealed(false);
-  }, [substance.id, edition, mcqPool, inquiryPool]);
+  const activePool = { mcq: mcqPool, inquiry: inquiryPool, calculation: calculationPool }[quizMode];
+  const activeQuestion = { mcq: currentMcq, inquiry: currentInquiry, calculation: currentCalculation }[quizMode];
+  const questionPosition = activeQuestion ? activePool.findIndex(question => question.id === activeQuestion.id) + 1 : 0;
 
   const handleSwitchQuestion = () => {
+    if (activePool.length < 2) return;
     if (quizMode === 'mcq') {
-      const next = pickNextQuestion(mcqPool, currentMcq?.id);
-      setCurrentMcq(next);
+      setCurrentMcq(pickNextQuestion(mcqPool, currentMcq?.id));
       setSelectedOption(null);
       setMcqSubmitted(false);
       setMcqExplanationRevealed(false);
-    } else {
-      const next = pickNextQuestion(inquiryPool, currentInquiry?.id);
-      setCurrentInquiry(next);
-      setInquiryAnswers(next ? next.subQuestions.map(() => '') : []);
+    } else if (quizMode === 'inquiry') {
+      setCurrentInquiry(pickNextQuestion(inquiryPool, currentInquiry?.id));
+      setInquiryAnswers([]);
       setInquirySubmitted(false);
       setInquiryAnswerRevealed(false);
+    } else {
+      setCurrentCalculation(pickNextQuestion(calculationPool, currentCalculation?.id));
     }
   };
 
-  const activePool = quizMode === 'mcq' ? mcqPool : inquiryPool;
-  const activeQuestion = quizMode === 'mcq' ? currentMcq : currentInquiry;
-  const questionPosition = activeQuestion ? activePool.findIndex(question => question.id === activeQuestion.id) + 1 : 0;
+  const handleTabKey = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    const index = QUIZ_TYPES.findIndex(type => type.id === quizMode);
+    const size = QUIZ_TYPES.length;
+    let next: number;
+    switch (event.key) {
+      case 'ArrowLeft': next = (index + size - 1) % size; break;
+      case 'ArrowRight': next = (index + 1) % size; break;
+      case 'Home': next = 0; break;
+      case 'End': next = size - 1; break;
+      default: return;
+    }
+    event.preventDefault();
+    event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]')[next]?.focus();
+    setQuizMode(QUIZ_TYPES[next].id);
+  };
 
   return (
     <section className="card step-card" aria-labelledby="step6-title">
@@ -371,36 +385,21 @@ export const StepQuizPanel: React.FC<StepQuizPanelProps> = ({
           <span className="step-badge">步骤 6 · 巩固检测</span>
           <h2 id="step6-title">随堂练习与作答反馈</h2>
         </div>
+      </div>
 
-        <div className="quiz-controls">
-          <div className="quiz-type-tabs" role="tablist" aria-label="选择题型">
-            <button
-              type="button"
-              role="tab"
-              id="quiz-tab-mcq"
-              aria-controls="quiz-panel-mcq"
-              aria-selected={quizMode === 'mcq'}
-              className={`clue-tab ${quizMode === 'mcq' ? 'is-active' : ''}`}
-              onClick={() => setQuizMode('mcq')}
-            >
-              单项选择题
+      <div className="quiz-controls">
+        <div className="quiz-type-tabs" role="tablist" aria-label="选择题型" onKeyDown={handleTabKey}>
+          {QUIZ_TYPES.map(({ id, label }) => (
+            <button key={id} type="button" role="tab" id={`quiz-tab-${id}`} aria-controls={`quiz-panel-${id}`}
+              aria-selected={quizMode === id} tabIndex={quizMode === id ? 0 : -1}
+              className={`clue-tab ${quizMode === id ? 'is-active' : ''}`} onClick={() => setQuizMode(id)}>
+              {label}
             </button>
-            <button
-              type="button"
-              role="tab"
-              id="quiz-tab-inquiry"
-              aria-controls="quiz-panel-inquiry"
-              aria-selected={quizMode === 'inquiry'}
-              className={`clue-tab ${quizMode === 'inquiry' ? 'is-active' : ''}`}
-              onClick={() => setQuizMode('inquiry')}
-              title="查看本物质、关联反应及同教材范围的实验探究题"
-            >
-              实验探究题
-            </button>
-          </div>
-
+          ))}
+        </div>
+        <div className="quiz-actions">
           <span className="quiz-question-count" role="status" data-testid="quiz-question-position">
-            {questionPosition} / {activePool.length} 题
+            {activePool.length ? `${questionPosition} / ${activePool.length} 题` : '暂无题目'}
           </span>
           <button type="button" className="btn-secondary btn-sm" onClick={handleSwitchQuestion}
             disabled={activePool.length < 2} title={activePool.length < 2 ? '当前题型不足两道题，暂不能换题' : '切换当前题型的下一道题'}>
@@ -409,15 +408,7 @@ export const StepQuizPanel: React.FC<StepQuizPanelProps> = ({
         </div>
       </div>
 
-      {inquiryPool.length === 0 && (
-        <p className="inquiry-disabled-note">
-          当前教材范围暂无实验探究题，可先完成选择题与计算题，或切换教材范围后重新查看。
-        </p>
-      )}
-
-      {/* 单项选择题视图 */}
-      {quizMode === 'mcq' && (
-        <div className="quiz-body" id="quiz-panel-mcq" role="tabpanel" aria-labelledby="quiz-tab-mcq">
+      <div className="quiz-body" id="quiz-panel-mcq" role="tabpanel" tabIndex={0} aria-labelledby="quiz-tab-mcq" hidden={quizMode !== 'mcq'}>
           {!currentMcq ? (
             <div className="status-banner is-warn">当前版本下暂无匹配的选择题。</div>
           ) : (
@@ -515,12 +506,9 @@ export const StepQuizPanel: React.FC<StepQuizPanelProps> = ({
               )}
             </>
           )}
-        </div>
-      )}
+      </div>
 
-      {/* 实验探究题视图 */}
-      {quizMode === 'inquiry' && (
-        <div className="quiz-body" id="quiz-panel-inquiry" role="tabpanel" aria-labelledby="quiz-tab-inquiry">
+      <div className="quiz-body" id="quiz-panel-inquiry" role="tabpanel" tabIndex={0} aria-labelledby="quiz-tab-inquiry" hidden={quizMode !== 'inquiry'}>
           {!currentInquiry ? <div className="status-banner is-warn" role="status">
             当前教材范围暂无可用的实验探究题，请切换教材范围或选择单项选择题。
           </div> : <>
@@ -611,10 +599,18 @@ export const StepQuizPanel: React.FC<StepQuizPanelProps> = ({
             )
           )}
           </>}
-        </div>
-      )}
+      </div>
 
-      <CalculationQuestionCard key={`${substance.id}:${edition}`} substance={substance} edition={edition} teacherDelayReveal={teacherDelayReveal} />
+      <div className="quiz-body" id="quiz-panel-calculation" role="tabpanel" tabIndex={0} aria-labelledby="quiz-tab-calculation" hidden={quizMode !== 'calculation'}>
+        {currentCalculation ? (
+          <CalculationQuestionCard key={currentCalculation.id} question={currentCalculation} teacherDelayReveal={teacherDelayReveal} />
+        ) : <div className="status-banner is-warn">当前教材范围暂无匹配的计算题。</div>}
+      </div>
+
+      <footer className="quiz-resource-footer" data-testid="quiz-resource-footer">
+        <span>拓展练习：学科网</span>
+        <a href="https://www.zxxk.com/" target="_blank" rel="noopener noreferrer">https://www.zxxk.com/</a>
+      </footer>
 
       <div className="step-nav-footer">
         <button type="button" className="btn-secondary" onClick={onRestartFlow}>

@@ -1,11 +1,11 @@
 import {
   MassRatioItem,
   SubstanceCategory,
-  SubstanceComposition,
   SubstanceEntry,
   SubstanceKind,
   TextbookEdition,
 } from '../types/chemistry';
+import { SubstanceComposition } from '../types/microstructure';
 
 export const DEFAULT_SOURCE = '通用初中化学基础（知识库自编，未对应具体页码）';
 export const DEFAULT_REVIEW = 'AI 整理，尚未经教师审校';

@@ -1,85 +1,75 @@
-import { SubstanceComposition } from '../../types/chemistry';
+import { MicroParticle, SubstanceComposition } from '../../types/microstructure';
 import { ELEMENT_CHINESE_NAMES } from './massRatio';
 
-export interface AtomVisualStyle {
-  fill: string;
-  stroke: string;
-  textColor: string;
-  radius: number;
-}
-
-const ATOM_STYLES: Record<string, AtomVisualStyle> = {
-  H: { fill: '#f8fafc', stroke: '#475569', textColor: '#0f172a', radius: 18 },
-  O: { fill: '#ef4444', stroke: '#b91c1c', textColor: '#ffffff', radius: 24 },
-  C: { fill: '#334155', stroke: '#0f172a', textColor: '#ffffff', radius: 24 },
-  S: { fill: '#eab308', stroke: '#a16207', textColor: '#0f172a', radius: 26 },
-  Cl: { fill: '#22c55e', stroke: '#15803d', textColor: '#ffffff', radius: 25 },
-  Na: { fill: '#8b5cf6', stroke: '#5b21b6', textColor: '#ffffff', radius: 26 },
-  Ca: { fill: '#0ea5e9', stroke: '#0369a1', textColor: '#ffffff', radius: 28 },
-  Fe: { fill: '#d97706', stroke: '#92400e', textColor: '#ffffff', radius: 26 },
-  Cu: { fill: '#ea580c', stroke: '#9a3412', textColor: '#ffffff', radius: 26 },
-  Mg: { fill: '#14b8a6', stroke: '#0f766e', textColor: '#ffffff', radius: 25 },
-  Zn: { fill: '#64748b', stroke: '#334155', textColor: '#ffffff', radius: 25 },
-  Mn: { fill: '#a855f7', stroke: '#6b21a8', textColor: '#ffffff', radius: 26 },
-  K: { fill: '#ec4899', stroke: '#9d174d', textColor: '#ffffff', radius: 28 },
-  Al: { fill: '#3b82f6', stroke: '#1d4ed8', textColor: '#ffffff', radius: 25 },
+// 颜色与尺寸仅为教学图例，不代表物质颜色或实际原子半径。
+const ATOM_COLORS: Record<string, readonly [fill: string, stroke: string, textColor?: string]> = {
+  H: ['#f8fafc', '#475569', '#0f172a'],
+  O: ['#dc2626', '#991b1b'],
+  C: ['#334155', '#0f172a'],
+  N: ['#1d4ed8', '#1e3a8a'],
+  S: ['#facc15', '#a16207', '#422006'],
+  Cl: ['#15803d', '#14532d'],
+  Na: ['#7c3aed', '#5b21b6'],
+  Ca: ['#0369a1', '#075985'],
+  Fe: ['#b45309', '#78350f'],
+  Cu: ['#c2410c', '#7c2d12'],
+  Mg: ['#0f766e', '#134e4a'],
+  Zn: ['#475569', '#1e293b'],
+  Mn: ['#9333ea', '#581c87'],
+  K: ['#be185d', '#831843'],
+  Ag: ['#cbd5e1', '#475569', '#0f172a'],
 };
 
-export function getAtomStyle(symbol: string): AtomVisualStyle {
-  return (
-    ATOM_STYLES[symbol] ?? {
-      fill: '#2563eb',
-      stroke: '#1e40af',
-      textColor: '#ffffff',
-      radius: 24,
+export function getAtomStyle(symbol: string) {
+  const [fill, stroke, textColor = '#fff'] = ATOM_COLORS[symbol] ?? ['#2563eb', '#1e40af'];
+  return { fill, stroke, textColor, radius: symbol === 'H' ? 11 : 15 };
+}
+
+interface MicroTile {
+  particle: MicroParticle;
+  name?: string;
+  count?: number;
+  charge?: number;
+}
+
+export function describeMicroDiagram(composition: SubstanceComposition): {
+  title: string; description: string; tiles: MicroTile[];
+} {
+  switch (composition.structureType) {
+    case 'molecule':
+    case 'atomic_lattice':
+      return {
+        title: composition.structureType === 'molecule' ? '分子结构示意' : '固体原子排列示意',
+        description: composition.description,
+        tiles: [{ particle: composition.particle }],
+      };
+    case 'ionic':
+    case 'aqueous': {
+      const inWater = composition.structureType === 'aqueous';
+      return {
+        title: inWater ? '水溶液中的主要微粒' : '固体中的离子个数比',
+        description: `离子个数比（按图中顺序）：${composition.ions.map(ion => ion.count).join(' : ')}。`,
+        tiles: inWater ? [...composition.ions, { name: '水分子（溶剂）', particle: composition.solvent }] : [...composition.ions],
+      };
     }
-  );
-}
-
-export interface MicroLegendItem {
-  symbol: string;
-  label: string;
-  fill: string;
-  stroke: string;
-  textColor: string;
-}
-
-/** 原子团的整体电荷不能错误地标在中心原子或羟基中的氧原子上。 */
-export function getMicroAtomCharge(atom: SubstanceComposition['atoms'][number], composition: SubstanceComposition): string | undefined {
-  if (atom.role === 'center' || (atom.symbol === 'O' && composition.atoms.some(item => item.symbol === 'H' && item.role === 'ligand'))) return undefined;
-  return atom.charge;
-}
-
-/**
- * 构建微观示意图图例（只显示单个元素/离子符号及名称，绝不出现目标化学式字符串）
- */
-export function buildMicroLegend(composition: SubstanceComposition): MicroLegendItem[] {
-  const seen = new Set<string>();
-  const legend: MicroLegendItem[] = [];
-
-  for (const atom of composition.atoms) {
-    const charge = getMicroAtomCharge(atom, composition);
-    const key = `${atom.symbol}|${charge ?? ''}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-
-    const style = getAtomStyle(atom.symbol);
-    const cnName = ELEMENT_CHINESE_NAMES[atom.symbol] ?? atom.symbol;
-    const particleType =
-      charge && charge.includes('+')
-        ? '阳离子'
-        : charge && charge.includes('-')
-        ? '阴离子'
-        : '原子';
-
-    legend.push({
-      symbol: atom.symbol,
-      label: `${atom.symbol}（${cnName}${particleType}）`,
-      fill: style.fill,
-      stroke: style.stroke,
-      textColor: style.textColor,
-    });
+    case 'solid_ratio':
+      return {
+        title: '固体的元素组成示意',
+        description: '标出固体中各元素的个数比，不画离散分子。',
+        tiles: composition.elements.map(({ symbol, count }) => ({
+          name: `${ELEMENT_CHINESE_NAMES[symbol]}元素`, count, particle: { atoms: [[symbol, 0, 0]], bonds: [] },
+        })),
+      };
   }
+}
 
-  return legend;
+export function formatIonCharge(charge: number): string {
+  return `${Math.abs(charge) > 1 ? Math.abs(charge) : ''}${charge > 0 ? '+' : '−'}`;
+}
+
+export function buildMicroLegend(particles: readonly MicroParticle[]) {
+  const symbols = new Set(particles.flatMap(particle => particle.atoms.map(([symbol]) => symbol)));
+  return [...symbols].map(symbol => ({
+    symbol, label: `${symbol}（${ELEMENT_CHINESE_NAMES[symbol]}）`, ...getAtomStyle(symbol),
+  }));
 }

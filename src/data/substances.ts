@@ -1,5 +1,6 @@
 import { OutOfScopeEntry, SubstanceEntry } from '../types/chemistry';
 import { AUX_SUBSTANCES } from './auxSubstances';
+import { MICRO_STRUCTURES } from './microStructures';
 
 const DEFAULT_SOURCE = '通用初中化学基础（知识库自编，未对应具体页码）';
 const DEFAULT_REVIEW = 'AI 整理，尚未经教师审校';
@@ -14,11 +15,7 @@ export const SUBSTANCES: SubstanceEntry[] = [
     formula: 'O2',
     acceptedForms: ['O2'],
     category: '单质',
-    composition: {
-      structureType: 'molecule',
-      unitDescription: '每个分子由 2 个氧原子构成',
-      atoms: [{ symbol: 'O', count: 2, role: 'ligand' }],
-    },
+    composition: MICRO_STRUCTURES.o2,
     massRatio: null,
     hints: [
       '该物质只由氧元素一种元素组成，属于非金属单质。',
@@ -43,11 +40,7 @@ export const SUBSTANCES: SubstanceEntry[] = [
     formula: 'H2',
     acceptedForms: ['H2'],
     category: '单质',
-    composition: {
-      structureType: 'molecule',
-      unitDescription: '每个分子由 2 个氢原子构成',
-      atoms: [{ symbol: 'H', count: 2, role: 'ligand' }],
-    },
+    composition: MICRO_STRUCTURES.h2,
     massRatio: null,
     hints: [
       '该物质只由氢元素一种元素组成，是自然界中密度最小的气体单质。',
@@ -72,11 +65,7 @@ export const SUBSTANCES: SubstanceEntry[] = [
     formula: 'C',
     acceptedForms: ['C'],
     category: '单质',
-    composition: {
-      structureType: 'network_atom',
-      unitDescription: '由碳原子直接构成，化学式直接用元素符号表示',
-      atoms: [{ symbol: 'C', count: 1, role: 'lattice' }],
-    },
+    composition: MICRO_STRUCTURES.c,
     massRatio: null,
     hints: [
       '该物质由碳元素组成，属于固态非金属单质。',
@@ -101,11 +90,7 @@ export const SUBSTANCES: SubstanceEntry[] = [
     formula: 'S',
     acceptedForms: ['S'],
     category: '单质',
-    composition: {
-      structureType: 'network_atom',
-      unitDescription: '初中化学中硫单质的化学式直接用硫元素符号表示',
-      atoms: [{ symbol: 'S', count: 1, role: 'lattice' }],
-    },
+    composition: MICRO_STRUCTURES.s,
     massRatio: null,
     hints: [
       '该物质由硫元素组成，是一种淡黄色固体非金属单质。',
@@ -130,11 +115,7 @@ export const SUBSTANCES: SubstanceEntry[] = [
     formula: 'Fe',
     acceptedForms: ['Fe'],
     category: '单质',
-    composition: {
-      structureType: 'metallic',
-      unitDescription: '由铁原子直接构成，金属单质直接用元素符号表示',
-      atoms: [{ symbol: 'Fe', count: 1, role: 'lattice' }],
-    },
+    composition: MICRO_STRUCTURES.fe,
     massRatio: null,
     hints: [
       '该物质是生活中最常见的金属单质，由铁元素组成。',
@@ -159,11 +140,7 @@ export const SUBSTANCES: SubstanceEntry[] = [
     formula: 'Cu',
     acceptedForms: ['Cu'],
     category: '单质',
-    composition: {
-      structureType: 'metallic',
-      unitDescription: '由铜原子直接构成，化学式直接用元素符号表示',
-      atoms: [{ symbol: 'Cu', count: 1, role: 'lattice' }],
-    },
+    composition: MICRO_STRUCTURES.cu,
     massRatio: null,
     hints: [
       '该物质是紫红色金属单质，由铜元素组成。',
@@ -188,11 +165,7 @@ export const SUBSTANCES: SubstanceEntry[] = [
     formula: 'Mg',
     acceptedForms: ['Mg'],
     category: '单质',
-    composition: {
-      structureType: 'metallic',
-      unitDescription: '由镁原子直接构成，化学式直接用元素符号表示',
-      atoms: [{ symbol: 'Mg', count: 1, role: 'lattice' }],
-    },
+    composition: MICRO_STRUCTURES.mg,
     massRatio: null,
     hints: [
       '该物质由镁元素组成，是一种银白色金属单质。',
@@ -217,11 +190,7 @@ export const SUBSTANCES: SubstanceEntry[] = [
     formula: 'Zn',
     acceptedForms: ['Zn'],
     category: '单质',
-    composition: {
-      structureType: 'metallic',
-      unitDescription: '由锌原子直接构成，化学式直接用元素符号表示',
-      atoms: [{ symbol: 'Zn', count: 1, role: 'lattice' }],
-    },
+    composition: MICRO_STRUCTURES.zn,
     massRatio: null,
     hints: [
       '该物质由锌元素组成，实验室常以颗粒状固体形式用于制取氢气。',
@@ -248,14 +217,7 @@ export const SUBSTANCES: SubstanceEntry[] = [
     formula: 'H2O',
     acceptedForms: ['H2O'],
     category: '氧化物',
-    composition: {
-      structureType: 'molecule',
-      unitDescription: '每个分子由 2 个氢原子和 1 个氧原子构成',
-      atoms: [
-        { symbol: 'O', count: 1, role: 'center' },
-        { symbol: 'H', count: 2, role: 'ligand' },
-      ],
-    },
+    composition: MICRO_STRUCTURES.h2o,
     massRatio: [
       { symbol: 'H', name: '氢', ratioValue: 1 },
       { symbol: 'O', name: '氧', ratioValue: 8 },
@@ -283,14 +245,7 @@ export const SUBSTANCES: SubstanceEntry[] = [
     formula: 'CO2',
     acceptedForms: ['CO2'],
     category: '氧化物',
-    composition: {
-      structureType: 'molecule',
-      unitDescription: '每个分子由 1 个碳原子和 2 个氧原子构成',
-      atoms: [
-        { symbol: 'C', count: 1, role: 'center' },
-        { symbol: 'O', count: 2, role: 'ligand' },
-      ],
-    },
+    composition: MICRO_STRUCTURES.co2,
     massRatio: [
       { symbol: 'C', name: '碳', ratioValue: 3 },
       { symbol: 'O', name: '氧', ratioValue: 8 },
@@ -318,14 +273,7 @@ export const SUBSTANCES: SubstanceEntry[] = [
     formula: 'CO',
     acceptedForms: ['CO'],
     category: '氧化物',
-    composition: {
-      structureType: 'molecule',
-      unitDescription: '每个分子由 1 个碳原子和 1 个氧原子构成',
-      atoms: [
-        { symbol: 'C', count: 1, role: 'center' },
-        { symbol: 'O', count: 1, role: 'ligand' },
-      ],
-    },
+    composition: MICRO_STRUCTURES.co,
     massRatio: [
       { symbol: 'C', name: '碳', ratioValue: 3 },
       { symbol: 'O', name: '氧', ratioValue: 4 },
@@ -353,14 +301,7 @@ export const SUBSTANCES: SubstanceEntry[] = [
     formula: 'CaO',
     acceptedForms: ['CaO'],
     category: '氧化物',
-    composition: {
-      structureType: 'ionic',
-      unitDescription: '由钙离子与氧离子按 1 : 1 个数比构成',
-      atoms: [
-        { symbol: 'Ca', count: 1, charge: '2+', role: 'cation' },
-        { symbol: 'O', count: 1, charge: '2-', role: 'anion' },
-      ],
-    },
+    composition: MICRO_STRUCTURES.cao,
     massRatio: [
       { symbol: 'Ca', name: '钙', ratioValue: 5 },
       { symbol: 'O', name: '氧', ratioValue: 2 },
@@ -388,14 +329,7 @@ export const SUBSTANCES: SubstanceEntry[] = [
     formula: 'CuO',
     acceptedForms: ['CuO'],
     category: '氧化物',
-    composition: {
-      structureType: 'ionic',
-      unitDescription: '由铜离子与氧离子按 1 : 1 个数比构成',
-      atoms: [
-        { symbol: 'Cu', count: 1, charge: '2+', role: 'cation' },
-        { symbol: 'O', count: 1, charge: '2-', role: 'anion' },
-      ],
-    },
+    composition: MICRO_STRUCTURES.cuo,
     massRatio: [
       { symbol: 'Cu', name: '铜', ratioValue: 4 },
       { symbol: 'O', name: '氧', ratioValue: 1 },
@@ -423,14 +357,7 @@ export const SUBSTANCES: SubstanceEntry[] = [
     formula: 'Fe2O3',
     acceptedForms: ['Fe2O3'],
     category: '氧化物',
-    composition: {
-      structureType: 'ionic',
-      unitDescription: '构成微粒中铁离子与氧离子的个数比为 2 : 3',
-      atoms: [
-        { symbol: 'Fe', count: 2, charge: '3+', role: 'cation' },
-        { symbol: 'O', count: 3, charge: '2-', role: 'anion' },
-      ],
-    },
+    composition: MICRO_STRUCTURES.fe2o3,
     massRatio: [
       { symbol: 'Fe', name: '铁', ratioValue: 7 },
       { symbol: 'O', name: '氧', ratioValue: 3 },
@@ -458,14 +385,7 @@ export const SUBSTANCES: SubstanceEntry[] = [
     formula: 'MnO2',
     acceptedForms: ['MnO2'],
     category: '氧化物',
-    composition: {
-      structureType: 'ionic',
-      unitDescription: '构成微粒中锰原子与氧原子的个数比为 1 : 2',
-      atoms: [
-        { symbol: 'Mn', count: 1, role: 'center' },
-        { symbol: 'O', count: 2, role: 'ligand' },
-      ],
-    },
+    composition: MICRO_STRUCTURES.mno2,
     massRatio: [
       { symbol: 'Mn', name: '锰', ratioValue: 55 },
       { symbol: 'O', name: '氧', ratioValue: 32 },
@@ -495,14 +415,7 @@ export const SUBSTANCES: SubstanceEntry[] = [
     formula: 'HCl',
     acceptedForms: ['HCl'],
     category: '酸',
-    composition: {
-      structureType: 'molecule',
-      unitDescription: '每个氯化氢分子由 1 个氢原子和 1 个氯原子构成',
-      atoms: [
-        { symbol: 'H', count: 1, role: 'ligand' },
-        { symbol: 'Cl', count: 1, role: 'ligand' },
-      ],
-    },
+    composition: MICRO_STRUCTURES.hcl,
     massRatio: [
       { symbol: 'H', name: '氢', ratioValue: 2 },
       { symbol: 'Cl', name: '氯', ratioValue: 71 },
@@ -532,21 +445,14 @@ export const SUBSTANCES: SubstanceEntry[] = [
     formula: 'HCl',
     acceptedForms: ['HCl'],
     category: '酸',
-    composition: {
-      structureType: 'molecule',
-      unitDescription: '溶质氯化氢的每个分子由 1 个氢原子和 1 个氯原子构成',
-      atoms: [
-        { symbol: 'H', count: 1, role: 'ligand' },
-        { symbol: 'Cl', count: 1, role: 'ligand' },
-      ],
-    },
+    composition: MICRO_STRUCTURES.dilute_hcl,
     massRatio: [
       { symbol: 'H', name: '氢', ratioValue: 2 },
       { symbol: 'Cl', name: '氯', ratioValue: 71 },
     ],
     hints: [
       '稀盐酸是氯化氢气体的水溶液，溶质由氢（H）和氯（Cl）两种元素组成。',
-      '溶质分子中氢原子与氯原子的个数比为 1 : 1。',
+      '在水中氯化氢电离，形成水合氢离子与氯离子；溶质化学式表示的氢、氯个数比仍是 1 : 1。',
       '氢元素显 +1 价，氯元素显 -1 价，H 在前，Cl（注意第二个字母是小写 l）在后。',
     ],
     physical: '无色透明液体，略带刺激性气味，不易挥发（与浓盐酸的强挥发性不同）。',
@@ -567,15 +473,7 @@ export const SUBSTANCES: SubstanceEntry[] = [
     formula: 'H2SO4',
     acceptedForms: ['H2SO4'],
     category: '酸',
-    composition: {
-      structureType: 'molecule',
-      unitDescription: '每个分子由 2 个氢原子、1 个硫原子和 4 个氧原子构成',
-      atoms: [
-        { symbol: 'S', count: 1, role: 'center' },
-        { symbol: 'H', count: 2, role: 'ligand' },
-        { symbol: 'O', count: 4, role: 'ligand' },
-      ],
-    },
+    composition: MICRO_STRUCTURES.h2so4,
     massRatio: [
       { symbol: 'H', name: '氢', ratioValue: 1 },
       { symbol: 'S', name: '硫', ratioValue: 16 },
@@ -606,15 +504,7 @@ export const SUBSTANCES: SubstanceEntry[] = [
     formula: 'NaOH',
     acceptedForms: ['NaOH'],
     category: '碱',
-    composition: {
-      structureType: 'ionic',
-      unitDescription: '由钠离子与氢氧根离子按 1 : 1 个数比构成',
-      atoms: [
-        { symbol: 'Na', count: 1, charge: '+', role: 'cation' },
-        { symbol: 'O', count: 1, charge: '-', role: 'anion' },
-        { symbol: 'H', count: 1, role: 'ligand' },
-      ],
-    },
+    composition: MICRO_STRUCTURES.naoh,
     massRatio: [
       { symbol: 'Na', name: '钠', ratioValue: 23 },
       { symbol: 'O', name: '氧', ratioValue: 16 },
@@ -643,15 +533,7 @@ export const SUBSTANCES: SubstanceEntry[] = [
     formula: 'Ca(OH)2',
     acceptedForms: ['Ca(OH)2'],
     category: '碱',
-    composition: {
-      structureType: 'ionic',
-      unitDescription: '由钙离子与氢氧根离子按 1 : 2 个数比构成',
-      atoms: [
-        { symbol: 'Ca', count: 1, charge: '2+', role: 'cation' },
-        { symbol: 'O', count: 2, charge: '-', role: 'anion' },
-        { symbol: 'H', count: 2, role: 'ligand' },
-      ],
-    },
+    composition: MICRO_STRUCTURES.caoh2,
     massRatio: [
       { symbol: 'Ca', name: '钙', ratioValue: 20 },
       { symbol: 'O', name: '氧', ratioValue: 16 },
@@ -682,15 +564,7 @@ export const SUBSTANCES: SubstanceEntry[] = [
     formula: 'Ca(OH)2',
     acceptedForms: ['Ca(OH)2'],
     category: '碱',
-    composition: {
-      structureType: 'ionic',
-      unitDescription: '溶质氢氧化钙由钙离子与氢氧根离子按 1 : 2 个数比构成',
-      atoms: [
-        { symbol: 'Ca', count: 1, charge: '2+', role: 'cation' },
-        { symbol: 'O', count: 2, charge: '-', role: 'anion' },
-        { symbol: 'H', count: 2, role: 'ligand' },
-      ],
-    },
+    composition: MICRO_STRUCTURES.limewater,
     massRatio: [
       { symbol: 'Ca', name: '钙', ratioValue: 20 },
       { symbol: 'O', name: '氧', ratioValue: 16 },
@@ -721,14 +595,7 @@ export const SUBSTANCES: SubstanceEntry[] = [
     formula: 'NaCl',
     acceptedForms: ['NaCl'],
     category: '盐',
-    composition: {
-      structureType: 'ionic',
-      unitDescription: '由钠离子与氯离子按 1 : 1 个数比构成',
-      atoms: [
-        { symbol: 'Na', count: 1, charge: '+', role: 'cation' },
-        { symbol: 'Cl', count: 1, charge: '-', role: 'anion' },
-      ],
-    },
+    composition: MICRO_STRUCTURES.nacl,
     massRatio: [
       { symbol: 'Na', name: '钠', ratioValue: 46 },
       { symbol: 'Cl', name: '氯', ratioValue: 71 },
@@ -756,15 +623,7 @@ export const SUBSTANCES: SubstanceEntry[] = [
     formula: 'Na2CO3',
     acceptedForms: ['Na2CO3'],
     category: '盐',
-    composition: {
-      structureType: 'ionic',
-      unitDescription: '由钠离子与碳酸根离子按 2 : 1 个数比构成',
-      atoms: [
-        { symbol: 'Na', count: 2, charge: '+', role: 'cation' },
-        { symbol: 'C', count: 1, charge: '2-', role: 'center' },
-        { symbol: 'O', count: 3, role: 'ligand' },
-      ],
-    },
+    composition: MICRO_STRUCTURES.na2co3,
     massRatio: [
       { symbol: 'Na', name: '钠', ratioValue: 23 },
       { symbol: 'C', name: '碳', ratioValue: 6 },
@@ -793,15 +652,7 @@ export const SUBSTANCES: SubstanceEntry[] = [
     formula: 'CaCO3',
     acceptedForms: ['CaCO3'],
     category: '盐',
-    composition: {
-      structureType: 'ionic',
-      unitDescription: '由钙离子与碳酸根离子按 1 : 1 个数比构成',
-      atoms: [
-        { symbol: 'Ca', count: 1, charge: '2+', role: 'cation' },
-        { symbol: 'C', count: 1, charge: '2-', role: 'center' },
-        { symbol: 'O', count: 3, role: 'ligand' },
-      ],
-    },
+    composition: MICRO_STRUCTURES.caco3,
     massRatio: [
       { symbol: 'Ca', name: '钙', ratioValue: 10 },
       { symbol: 'C', name: '碳', ratioValue: 3 },
@@ -832,15 +683,7 @@ export const SUBSTANCES: SubstanceEntry[] = [
     formula: 'CaCO3',
     acceptedForms: ['CaCO3'],
     category: '混合物',
-    composition: {
-      structureType: 'ionic',
-      unitDescription: '主要成分碳酸钙由钙离子与碳酸根离子按 1 : 1 个数比构成',
-      atoms: [
-        { symbol: 'Ca', count: 1, charge: '2+', role: 'cation' },
-        { symbol: 'C', count: 1, charge: '2-', role: 'center' },
-        { symbol: 'O', count: 3, role: 'ligand' },
-      ],
-    },
+    composition: MICRO_STRUCTURES.limestone,
     massRatio: [
       { symbol: 'Ca', name: '钙', ratioValue: 10 },
       { symbol: 'C', name: '碳', ratioValue: 3 },
@@ -869,15 +712,7 @@ export const SUBSTANCES: SubstanceEntry[] = [
     formula: 'CuSO4',
     acceptedForms: ['CuSO4'],
     category: '盐',
-    composition: {
-      structureType: 'ionic',
-      unitDescription: '由铜离子与硫酸根离子按 1 : 1 个数比构成',
-      atoms: [
-        { symbol: 'Cu', count: 1, charge: '2+', role: 'cation' },
-        { symbol: 'S', count: 1, charge: '2-', role: 'center' },
-        { symbol: 'O', count: 4, role: 'ligand' },
-      ],
-    },
+    composition: MICRO_STRUCTURES.cuso4,
     massRatio: [
       { symbol: 'Cu', name: '铜', ratioValue: 2 },
       { symbol: 'S', name: '硫', ratioValue: 1 },
@@ -908,15 +743,7 @@ export const SUBSTANCES: SubstanceEntry[] = [
     formula: 'CuSO4',
     acceptedForms: ['CuSO4'],
     category: '盐',
-    composition: {
-      structureType: 'ionic',
-      unitDescription: '溶质硫酸铜由铜离子与硫酸根离子按 1 : 1 个数比构成',
-      atoms: [
-        { symbol: 'Cu', count: 1, charge: '2+', role: 'cation' },
-        { symbol: 'S', count: 1, charge: '2-', role: 'center' },
-        { symbol: 'O', count: 4, role: 'ligand' },
-      ],
-    },
+    composition: MICRO_STRUCTURES.cuso4_solution,
     massRatio: [
       { symbol: 'Cu', name: '铜', ratioValue: 2 },
       { symbol: 'S', name: '硫', ratioValue: 1 },
@@ -945,15 +772,7 @@ export const SUBSTANCES: SubstanceEntry[] = [
     formula: 'KMnO4',
     acceptedForms: ['KMnO4'],
     category: '盐',
-    composition: {
-      structureType: 'ionic',
-      unitDescription: '由钾离子与高锰酸根离子按 1 : 1 个数比构成',
-      atoms: [
-        { symbol: 'K', count: 1, charge: '+', role: 'cation' },
-        { symbol: 'Mn', count: 1, charge: '-', role: 'center' },
-        { symbol: 'O', count: 4, role: 'ligand' },
-      ],
-    },
+    composition: MICRO_STRUCTURES.kmno4,
     massRatio: [
       { symbol: 'K', name: '钾', ratioValue: 39 },
       { symbol: 'Mn', name: '锰', ratioValue: 55 },
@@ -984,14 +803,7 @@ export const SUBSTANCES: SubstanceEntry[] = [
     formula: 'H2O2',
     acceptedForms: ['H2O2'],
     category: '氧化物',
-    composition: {
-      structureType: 'molecule',
-      unitDescription: '每个分子由 2 个氢原子和 2 个氧原子构成',
-      atoms: [
-        { symbol: 'O', count: 2, role: 'center' },
-        { symbol: 'H', count: 2, role: 'ligand' },
-      ],
-    },
+    composition: MICRO_STRUCTURES.h2o2,
     massRatio: [
       { symbol: 'H', name: '氢', ratioValue: 1 },
       { symbol: 'O', name: '氧', ratioValue: 16 },
@@ -1019,14 +831,7 @@ export const SUBSTANCES: SubstanceEntry[] = [
     formula: 'CH4',
     acceptedForms: ['CH4'],
     category: '有机化合物',
-    composition: {
-      structureType: 'molecule',
-      unitDescription: '每个分子由 1 个碳原子和 4 个氢原子构成',
-      atoms: [
-        { symbol: 'C', count: 1, role: 'center' },
-        { symbol: 'H', count: 4, role: 'ligand' },
-      ],
-    },
+    composition: MICRO_STRUCTURES.ch4,
     massRatio: [
       { symbol: 'C', name: '碳', ratioValue: 3 },
       { symbol: 'H', name: '氢', ratioValue: 1 },

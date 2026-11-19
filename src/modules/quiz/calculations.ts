@@ -46,13 +46,16 @@ export function getCalculationQuestions(substance: SubstanceEntry, edition: Text
   const display = formatFormulaPreview(target.formula);
   const scopeNote = substance.kind === 'pure' ? ''
     : ` 本题只计算${substance.kind === 'solution' ? '溶质' : '主要成分'}${substance.mainComponentName}，不把整份${substance.kind === 'solution' ? '溶液' : '混合物'}当作纯净物。`;
-  const massName = target.composition.structureType === 'molecule' ? '相对分子质量'
-    : entries.length === 1 ? '相对原子质量' : '相对式量';
+  // 硫单质在初中方程式中沿用元素符号；不能把这个符号的相对原子质量叫作分子量。
+  const singleAtomFormula = entries.length === 1 && entries[0][1] === 1;
+  const massName = singleAtomFormula ? '相对原子质量'
+    : target.composition.structureType === 'molecule' ? '相对分子质量' : '相对式量';
+  const massSubject = singleAtomFormula ? `${display} 原子` : target.name;
   const base = { type: 'calculation' as const, substanceId: substance.id, atomicMasses: atomicMassText([target.formula]), reactionIds: [] as string[] };
   const massTerms = entries.map(([symbol, count]) => `${RELATIVE_ATOMIC_MASS[symbol]}×${count}`).join(' + ');
   const questions: CalculationQuestion[] = [{
     ...base, id: `calc-${substance.id}-relative-mass`, kind: 'relative_mass', title: massName,
-    stem: `根据化学式 ${display}，计算${target.name}的${massName}。${scopeNote}`,
+    stem: `根据本题采用的相对原子质量，计算${massSubject}${singleAtomFormula ? '' : `（${display}）`}的${massName}。${scopeNote}`,
     unit: '', answer: formulaMass, decimalPlaces: Number.isInteger(formulaMass) ? 0 : 1,
     steps: [
       `从化学式统计原子个数：${entries.map(([symbol, count]) => `${symbol} 为 ${count}`).join('，')}。`,
@@ -117,7 +120,7 @@ export function getCalculationQuestions(substance: SubstanceEntry, edition: Text
         ],
       });
       // 单原子单质优先给出有实际运算的反应计算题，避免只照抄相对原子质量。
-      if (entries.length === 1 && target.composition.structureType !== 'molecule') questions.unshift(questions.pop()!);
+      if (singleAtomFormula) questions.unshift(questions.pop()!);
     }
   }
   return questions;

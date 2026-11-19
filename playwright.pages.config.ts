@@ -6,7 +6,7 @@ const baseURL = externalURL ?? `http://127.0.0.1:${port}/chem-gemini/p1/`;
 
 export default defineConfig({
   testDir: './tests',
-  testMatch: /(pages|learning-upgrade)\.spec\.ts/,
+  testMatch: /(pages|learning-upgrade|microstructure)\.spec\.ts/,
   timeout: 30000,
   use: { baseURL, headless: true, screenshot: 'only-on-failure' },
   webServer: externalURL ? undefined : {

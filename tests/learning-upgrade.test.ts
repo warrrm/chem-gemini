@@ -3,7 +3,6 @@ import { ALL_SUBSTANCES, SUBSTANCE_BY_ID } from '../src/data/substances';
 import { REACTIONS } from '../src/data/reactions';
 import { parseChemicalFormula } from '../src/modules/formula/parser';
 import { getElementValenceClue, getFormulaClueLevel } from '../src/modules/knowledge/formulaClues';
-import { buildMicroLegend, getMicroAtomCharge } from '../src/modules/knowledge/microDiagram';
 import { getCalculationQuestions, getFormulaMass, gradeCalculationAnswer } from '../src/modules/quiz/calculations';
 import { pickNextQuestion } from '../src/modules/quiz';
 import { INITIAL_LEARNING_STATE, learningReducer } from '../src/state/learningMachine';
@@ -75,16 +74,6 @@ describe('按作答顺序开放线索', () => {
     expect(getElementValenceClue(sub('fe3o4')).note).toContain('不能');
   });
 
-  it('微观图不把原子团电荷标在单个碳、硫或羟基氧原子上', () => {
-    for (const id of ['caco3', 'cuso4', 'naoh', 'kmno4']) {
-      const composition = sub(id).composition;
-      for (const atom of composition.atoms.filter(item => item.role === 'center' || (item.symbol === 'O' && id === 'naoh'))) {
-        expect(getMicroAtomCharge(atom, composition)).toBeUndefined();
-      }
-    }
-    expect(buildMicroLegend(sub('caco3').composition).find(item => item.symbol === 'C')?.label).toBe('C（碳原子）');
-    expect(getMicroAtomCharge(sub('nacl').composition.atoms[1], sub('nacl').composition)).toBe('-');
-  });
 });
 
 describe('结构化计算题与数值校验', () => {
@@ -122,6 +111,8 @@ describe('结构化计算题与数值校验', () => {
   it('单原子单质优先提供反应质量计算，双原子分子相对质量按整个分子计算', () => {
     expect(getCalculationQuestions(sub('fe'), '通用版')[0].kind).toBe('reaction_mass');
     expect(getCalculationQuestions(sub('o2'), '通用版')[0]).toMatchObject({ kind: 'relative_mass', answer: 32 });
+    expect(getCalculationQuestions(sub('s'), '通用版').find(question => question.kind === 'relative_mass'))
+      .toMatchObject({ title: '相对原子质量', answer: 32 });
   });
 
   it('接受等价数值及匹配单位，拒绝空白、算式、无穷大和错误单位', () => {

@@ -1,5 +1,6 @@
 import { SubstanceEntry } from '../types/chemistry';
 import { auxSub } from './substanceHelper';
+import { MICRO_STRUCTURES } from './microStructures';
 
 export const AUX_SUBSTANCES: SubstanceEntry[] = [
   auxSub({
@@ -8,14 +9,7 @@ export const AUX_SUBSTANCES: SubstanceEntry[] = [
     aliases: ['二氧化硫'],
     formula: 'SO2',
     category: '氧化物',
-    composition: {
-      structureType: 'molecule',
-      unitDescription: '每个分子由 1 个硫原子和 2 个氧原子构成',
-      atoms: [
-        { symbol: 'S', count: 1, role: 'center' },
-        { symbol: 'O', count: 2, role: 'ligand' },
-      ],
-    },
+    composition: MICRO_STRUCTURES.so2,
     massRatio: [
       { symbol: 'S', name: '硫', ratioValue: 1 },
       { symbol: 'O', name: '氧', ratioValue: 1 },
@@ -36,14 +30,7 @@ export const AUX_SUBSTANCES: SubstanceEntry[] = [
     aliases: ['四氧化三铁', '磁性氧化铁'],
     formula: 'Fe3O4',
     category: '氧化物',
-    composition: {
-      structureType: 'ionic',
-      unitDescription: '构成微粒中铁原子与氧原子的个数比为 3 : 4',
-      atoms: [
-        { symbol: 'Fe', count: 3, role: 'cation' },
-        { symbol: 'O', count: 4, role: 'anion' },
-      ],
-    },
+    composition: MICRO_STRUCTURES.fe3o4,
     massRatio: [
       { symbol: 'Fe', name: '铁', ratioValue: 21 },
       { symbol: 'O', name: '氧', ratioValue: 8 },
@@ -64,14 +51,7 @@ export const AUX_SUBSTANCES: SubstanceEntry[] = [
     aliases: ['氧化镁'],
     formula: 'MgO',
     category: '氧化物',
-    composition: {
-      structureType: 'ionic',
-      unitDescription: '由镁离子与氧离子按 1 : 1 个数比构成',
-      atoms: [
-        { symbol: 'Mg', count: 1, charge: '2+', role: 'cation' },
-        { symbol: 'O', count: 1, charge: '2-', role: 'anion' },
-      ],
-    },
+    composition: MICRO_STRUCTURES.mgo,
     massRatio: [
       { symbol: 'Mg', name: '镁', ratioValue: 3 },
       { symbol: 'O', name: '氧', ratioValue: 2 },
@@ -92,15 +72,7 @@ export const AUX_SUBSTANCES: SubstanceEntry[] = [
     aliases: ['硫酸锌'],
     formula: 'ZnSO4',
     category: '盐',
-    composition: {
-      structureType: 'ionic',
-      unitDescription: '由锌离子与硫酸根离子按 1 : 1 个数比构成',
-      atoms: [
-        { symbol: 'Zn', count: 1, charge: '2+', role: 'cation' },
-        { symbol: 'S', count: 1, charge: '2-', role: 'center' },
-        { symbol: 'O', count: 4, role: 'ligand' },
-      ],
-    },
+    composition: MICRO_STRUCTURES.znso4,
     massRatio: [
       { symbol: 'Zn', name: '锌', ratioValue: 65 },
       { symbol: 'S', name: '硫', ratioValue: 32 },
@@ -122,15 +94,7 @@ export const AUX_SUBSTANCES: SubstanceEntry[] = [
     aliases: ['硫酸亚铁'],
     formula: 'FeSO4',
     category: '盐',
-    composition: {
-      structureType: 'ionic',
-      unitDescription: '由亚铁离子与硫酸根离子按 1 : 1 个数比构成',
-      atoms: [
-        { symbol: 'Fe', count: 1, charge: '2+', role: 'cation' },
-        { symbol: 'S', count: 1, charge: '2-', role: 'center' },
-        { symbol: 'O', count: 4, role: 'ligand' },
-      ],
-    },
+    composition: MICRO_STRUCTURES.feso4,
     massRatio: [
       { symbol: 'Fe', name: '铁', ratioValue: 7 },
       { symbol: 'S', name: '硫', ratioValue: 4 },
@@ -152,14 +116,7 @@ export const AUX_SUBSTANCES: SubstanceEntry[] = [
     aliases: ['氯化亚铁'],
     formula: 'FeCl2',
     category: '盐',
-    composition: {
-      structureType: 'ionic',
-      unitDescription: '由亚铁离子与氯离子按 1 : 2 个数比构成',
-      atoms: [
-        { symbol: 'Fe', count: 1, charge: '2+', role: 'cation' },
-        { symbol: 'Cl', count: 2, charge: '-', role: 'anion' },
-      ],
-    },
+    composition: MICRO_STRUCTURES.fecl2,
     massRatio: [
       { symbol: 'Fe', name: '铁', ratioValue: 56 },
       { symbol: 'Cl', name: '氯', ratioValue: 71 },
@@ -180,14 +137,7 @@ export const AUX_SUBSTANCES: SubstanceEntry[] = [
     aliases: ['氯化铁'],
     formula: 'FeCl3',
     category: '盐',
-    composition: {
-      structureType: 'ionic',
-      unitDescription: '由铁离子与氯离子按 1 : 3 个数比构成',
-      atoms: [
-        { symbol: 'Fe', count: 1, charge: '3+', role: 'cation' },
-        { symbol: 'Cl', count: 3, charge: '-', role: 'anion' },
-      ],
-    },
+    composition: MICRO_STRUCTURES.fecl3,
     massRatio: [
       { symbol: 'Fe', name: '铁', ratioValue: 112 },
       { symbol: 'Cl', name: '氯', ratioValue: 213 },
@@ -208,14 +158,7 @@ export const AUX_SUBSTANCES: SubstanceEntry[] = [
     aliases: ['氯化铜'],
     formula: 'CuCl2',
     category: '盐',
-    composition: {
-      structureType: 'ionic',
-      unitDescription: '由铜离子与氯离子按 1 : 2 个数比构成',
-      atoms: [
-        { symbol: 'Cu', count: 1, charge: '2+', role: 'cation' },
-        { symbol: 'Cl', count: 2, charge: '-', role: 'anion' },
-      ],
-    },
+    composition: MICRO_STRUCTURES.cucl2,
     massRatio: [
       { symbol: 'Cu', name: '铜', ratioValue: 64 },
       { symbol: 'Cl', name: '氯', ratioValue: 71 },
@@ -236,14 +179,7 @@ export const AUX_SUBSTANCES: SubstanceEntry[] = [
     aliases: ['氯化钙'],
     formula: 'CaCl2',
     category: '盐',
-    composition: {
-      structureType: 'ionic',
-      unitDescription: '由钙离子与氯离子按 1 : 2 个数比构成',
-      atoms: [
-        { symbol: 'Ca', count: 1, charge: '2+', role: 'cation' },
-        { symbol: 'Cl', count: 2, charge: '-', role: 'anion' },
-      ],
-    },
+    composition: MICRO_STRUCTURES.cacl2,
     massRatio: [
       { symbol: 'Ca', name: '钙', ratioValue: 40 },
       { symbol: 'Cl', name: '氯', ratioValue: 71 },
@@ -264,15 +200,7 @@ export const AUX_SUBSTANCES: SubstanceEntry[] = [
     aliases: ['碳酸'],
     formula: 'H2CO3',
     category: '酸',
-    composition: {
-      structureType: 'molecule',
-      unitDescription: '每个分子由 2 个氢原子、1 个碳原子和 3 个氧原子构成',
-      atoms: [
-        { symbol: 'C', count: 1, role: 'center' },
-        { symbol: 'H', count: 2, role: 'ligand' },
-        { symbol: 'O', count: 3, role: 'ligand' },
-      ],
-    },
+    composition: MICRO_STRUCTURES.h2co3,
     massRatio: [
       { symbol: 'H', name: '氢', ratioValue: 1 },
       { symbol: 'C', name: '碳', ratioValue: 6 },
@@ -294,15 +222,7 @@ export const AUX_SUBSTANCES: SubstanceEntry[] = [
     aliases: ['氢氧化铜'],
     formula: 'Cu(OH)2',
     category: '碱',
-    composition: {
-      structureType: 'ionic',
-      unitDescription: '由铜离子与氢氧根离子按 1 : 2 个数比构成',
-      atoms: [
-        { symbol: 'Cu', count: 1, charge: '2+', role: 'cation' },
-        { symbol: 'O', count: 2, charge: '-', role: 'anion' },
-        { symbol: 'H', count: 2, role: 'ligand' },
-      ],
-    },
+    composition: MICRO_STRUCTURES.cuoh2,
     massRatio: [
       { symbol: 'Cu', name: '铜', ratioValue: 32 },
       { symbol: 'O', name: '氧', ratioValue: 16 },
@@ -324,15 +244,7 @@ export const AUX_SUBSTANCES: SubstanceEntry[] = [
     aliases: ['硫酸钠'],
     formula: 'Na2SO4',
     category: '盐',
-    composition: {
-      structureType: 'ionic',
-      unitDescription: '由钠离子与硫酸根离子按 2 : 1 个数比构成',
-      atoms: [
-        { symbol: 'Na', count: 2, charge: '+', role: 'cation' },
-        { symbol: 'S', count: 1, charge: '2-', role: 'center' },
-        { symbol: 'O', count: 4, role: 'ligand' },
-      ],
-    },
+    composition: MICRO_STRUCTURES.na2so4,
     massRatio: [
       { symbol: 'Na', name: '钠', ratioValue: 23 },
       { symbol: 'S', name: '硫', ratioValue: 16 },
@@ -354,15 +266,7 @@ export const AUX_SUBSTANCES: SubstanceEntry[] = [
     aliases: ['锰酸钾'],
     formula: 'K2MnO4',
     category: '盐',
-    composition: {
-      structureType: 'ionic',
-      unitDescription: '由钾离子与锰酸根离子按 2 : 1 个数比构成',
-      atoms: [
-        { symbol: 'K', count: 2, charge: '+', role: 'cation' },
-        { symbol: 'Mn', count: 1, charge: '2-', role: 'center' },
-        { symbol: 'O', count: 4, role: 'ligand' },
-      ],
-    },
+    composition: MICRO_STRUCTURES.k2mno4,
     massRatio: [
       { symbol: 'K', name: '钾', ratioValue: 78 },
       { symbol: 'Mn', name: '锰', ratioValue: 55 },
@@ -384,15 +288,7 @@ export const AUX_SUBSTANCES: SubstanceEntry[] = [
     aliases: ['硝酸银'],
     formula: 'AgNO3',
     category: '盐',
-    composition: {
-      structureType: 'ionic',
-      unitDescription: '由银离子与硝酸根离子按 1 : 1 个数比构成',
-      atoms: [
-        { symbol: 'Ag', count: 1, charge: '+', role: 'cation' },
-        { symbol: 'N', count: 1, charge: '-', role: 'center' },
-        { symbol: 'O', count: 3, role: 'ligand' },
-      ],
-    },
+    composition: MICRO_STRUCTURES.agno3,
     massRatio: [
       { symbol: 'Ag', name: '银', ratioValue: 54 },
       { symbol: 'N', name: '氮', ratioValue: 7 },
@@ -414,14 +310,7 @@ export const AUX_SUBSTANCES: SubstanceEntry[] = [
     aliases: ['氯化银'],
     formula: 'AgCl',
     category: '盐',
-    composition: {
-      structureType: 'ionic',
-      unitDescription: '由银离子与氯离子按 1 : 1 个数比构成',
-      atoms: [
-        { symbol: 'Ag', count: 1, charge: '+', role: 'cation' },
-        { symbol: 'Cl', count: 1, charge: '-', role: 'anion' },
-      ],
-    },
+    composition: MICRO_STRUCTURES.agcl,
     massRatio: [
       { symbol: 'Ag', name: '银', ratioValue: 216 },
       { symbol: 'Cl', name: '氯', ratioValue: 71 },
@@ -442,15 +331,7 @@ export const AUX_SUBSTANCES: SubstanceEntry[] = [
     aliases: ['硝酸钠'],
     formula: 'NaNO3',
     category: '盐',
-    composition: {
-      structureType: 'ionic',
-      unitDescription: '由钠离子与硝酸根离子按 1 : 1 个数比构成',
-      atoms: [
-        { symbol: 'Na', count: 1, charge: '+', role: 'cation' },
-        { symbol: 'N', count: 1, charge: '-', role: 'center' },
-        { symbol: 'O', count: 3, role: 'ligand' },
-      ],
-    },
+    composition: MICRO_STRUCTURES.nano3,
     massRatio: [
       { symbol: 'Na', name: '钠', ratioValue: 23 },
       { symbol: 'N', name: '氮', ratioValue: 14 },
@@ -473,14 +354,7 @@ export const AUX_SUBSTANCES: SubstanceEntry[] = [
     aliases: ['氯化镁'],
     formula: 'MgCl2',
     category: '盐',
-    composition: {
-      structureType: 'ionic',
-      unitDescription: '由镁离子与氯离子按 1 : 2 个数比构成',
-      atoms: [
-        { symbol: 'Mg', count: 1, charge: '2+', role: 'cation' },
-        { symbol: 'Cl', count: 2, charge: '-', role: 'anion' },
-      ],
-    },
+    composition: MICRO_STRUCTURES.mgcl2,
     massRatio: [
       { symbol: 'Mg', name: '镁', ratioValue: 24 },
       { symbol: 'Cl', name: '氯', ratioValue: 71 },
@@ -501,15 +375,7 @@ export const AUX_SUBSTANCES: SubstanceEntry[] = [
     aliases: ['硝酸铜'],
     formula: 'Cu(NO3)2',
     category: '盐',
-    composition: {
-      structureType: 'ionic',
-      unitDescription: '由铜离子与硝酸根离子按 1 : 2 个数比构成',
-      atoms: [
-        { symbol: 'Cu', count: 1, charge: '2+', role: 'cation' },
-        { symbol: 'N', count: 2, charge: '-', role: 'center' },
-        { symbol: 'O', count: 6, role: 'ligand' },
-      ],
-    },
+    composition: MICRO_STRUCTURES.cuno32,
     massRatio: [
       { symbol: 'Cu', name: '铜', ratioValue: 16 },
       { symbol: 'N', name: '氮', ratioValue: 7 },
@@ -531,11 +397,7 @@ export const AUX_SUBSTANCES: SubstanceEntry[] = [
     aliases: ['银', '白银', '银丝'],
     formula: 'Ag',
     category: '单质',
-    composition: {
-      structureType: 'metallic',
-      unitDescription: '由银原子直接构成，化学式直接用元素符号表示',
-      atoms: [{ symbol: 'Ag', count: 1, role: 'lattice' }],
-    },
+    composition: MICRO_STRUCTURES.ag,
     massRatio: null,
     hints: [
       '该物质是银白色贵金属单质，由银元素组成。',
