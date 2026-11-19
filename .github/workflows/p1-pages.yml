@@ -1,4 +1,4 @@
-name: Publish P1 (preserve P0)
+name: Publish P0 showcase and P1
 
 on:
   push:
@@ -13,7 +13,9 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  P0_COMMIT: 7915a15d368091937cbaf92a08ceac038dfa48d0
+  # Tag for the manifest, full commit for verifying the source before it can run.
+  P0_TAG: v2.0.0-p0
+  P0_COMMIT: b29f2d23c5a7e3b3fc40dcd84489db917a03c49c
 
 jobs:
   build-and-test:
@@ -49,18 +51,23 @@ jobs:
       - name: Test static P1 (mock APIs only)
         run: npm run test:pages
 
-      - name: Checkout immutable P0 source
+      - name: Checkout tagged P0 classroom showcase
         uses: actions/checkout@v4
         with:
-          ref: ${{ env.P0_COMMIT }}
+          ref: ${{ env.P0_TAG }}
           path: .pages-p0
+          persist-credentials: false
 
-      - name: Rebuild preserved P0
+      - name: Verify pinned P0, build root-path static edition and test it (mock APIs only)
         working-directory: .pages-p0
-        run: npm ci && npm run build
+        run: |
+          test "$(git rev-parse HEAD)" = "$P0_COMMIT"
+          npm ci
+          npm run validate:data && npm test
+          npm run build:pages && npm run test:pages
 
       - name: Assemble P0 root and isolated P1 subdirectory
-        run: npm run assemble:pages
+        run: npm run assemble:pages && npm run test:pair
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
@@ -78,8 +85,8 @@ jobs:
       id-token: write
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}p1/
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Deploy P1 while preserving P0
+      - name: Deploy both verified editions
         id: deployment
         uses: actions/deploy-pages@v4

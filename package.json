@@ -9,6 +9,7 @@
     "build": "tsc --noEmit && vite build",
     "build:pages": "tsc --noEmit && vite build --mode pages",
     "assemble:pages": "tsx scripts/assemble-pages.ts",
+    "test:pair": "playwright test --config playwright.pair.config.ts",
     "preview": "vite preview",
     "validate:data": "tsx scripts/validate-data.ts",
     "test": "vitest run",

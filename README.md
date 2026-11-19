@@ -2,7 +2,7 @@
 
 - **P1 最终网页**：<https://warrrm.github.io/chem-gemini/p1/>
 - **P1 独立分支**：[`p1-release`](https://github.com/warrrm/chem-gemini/tree/p1-release)
-- **P0 保留网页**：<https://warrrm.github.io/chem-gemini/>（`p0-stable` / `v1.0.0-p0`）
+- **P0 课堂展示版**：<https://warrrm.github.io/chem-gemini/>（[`p0-showcase`](https://github.com/warrrm/chem-gemini/tree/p0-showcase) / `v2.0.0-p0`）；旧版源码仍在 `p0-stable` / `v1.0.0-p0`。
 - [P1 发布与版本隔离说明](docs/P1-发布说明.md)
 
 > **从一张照片，认识一种物质** —— 面向初中学生的互动式化学学习与教师课堂演示网站。
@@ -73,11 +73,11 @@ RUN_LIVE_AI_TEST=1 npm run test:live
 
 **重要：GitHub Pages 只能托管静态文件，不能运行默认密钥网关。** 部署后的静态网页不会包含本机 Key；需要在页面选择自备 API Key（受接口 CORS 支持限制），或另行部署带鉴权、限流的服务端网关。本项目自带网关有意限制为本机使用，不应直接开放到公网。不要通过 `VITE_` 变量或将 `.env.local` 提交到仓库来让静态站点共享默认 Key。
 
-P1 使用独立的 `.github/workflows/p1-pages.yml`，只由 `p1-release` 分支推送或手动运行触发。流水线先验证本机版，再以 `npm run build:pages` 构建 `/chem-gemini/p1/` 静态版，测试后将 P0 的固定提交 `7915a15d368091937cbaf92a08ceac038dfa48d0` 原样构建到根目录，P1 只放入 `p1/`。两版一起发布，但源码、资源路径与网页地址彼此隔离，`main` 不合并 P1。
+P1 使用独立的 `.github/workflows/p1-pages.yml`，只由 `p1-release` 分支推送或手动运行触发。流水线先验证本机版，再以 `npm run build:pages` 构建 `/chem-gemini/p1/` 静态版，再检出固定提交的 P0 展示版，以其自身 `build:pages` 构建并测试根路径静态版。P0 只放在根目录，P1 只放入 `p1/`。两版一起发布，但源码、资源、浏览器配置与网页地址彼此隔离。`main`、`p0-stable` 均保留旧 P0。
 
 旧的单版本 `Deploy to GitHub Pages` 工作流在新版成功上线后停用，防止只发布 P0 时误删 P1 路径。不要重新启用旧工作流发布；后续继续推送 `p1-release`。Pages 的 `github-pages` 环境需允许 `p1-release` 分支。
 
-静态版会明确提示自备 Key，并禁用“内置默认 Key”选项；“恢复默认参数”只恢复官方地址与模型，不声称线上存在密钥网关。站点根目录提供 `release-manifest.json`，记录两版提交及 P0 文件校验值。
+静态版会明确提示自备 Key，并禁用“内置默认 Key”选项；“恢复默认参数”只恢复官方地址与模型，不声称线上存在密钥网关。站点根目录提供 `release-manifest.json`，记录两版提交及各自文件的 SHA-256。
 
 ```bash
 npm run build:pages
@@ -88,7 +88,7 @@ npm run preview -- --mode pages --port 4186 --strictPort
 
 - **GitHub 仓库**：<https://github.com/warrrm/chem-gemini>
 - **P1 网页**：<https://warrrm.github.io/chem-gemini/p1/>
-- **P0 网页（保留）**：<https://warrrm.github.io/chem-gemini/>
+- **P0 网页（课堂展示版）**：<https://warrrm.github.io/chem-gemini/>
 
 ## DeepSeek 官方依据
 
