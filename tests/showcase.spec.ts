@@ -23,6 +23,10 @@ for (const [width, height] of [[320, 740], [390, 844], [768, 1024], [1440, 900]]
     await expect(page.locator('#root')).toHaveAttribute('data-app-version', 'p0');
     await expect(page.getByRole('heading', { level: 1 })).toHaveAccessibleName('从一张照片，认识一种物质');
     const nav = page.getByRole('navigation', { name: '学习步骤导航' });
+    const header = page.getByRole('banner');
+    await expect(header).not.toContainText(/版本适配仅供参考|尚未经教师审校/);
+    const toolbar = await header.locator('.navbar-inner').boundingBox();
+    expect((await nav.boundingBox())!.y - (toolbar!.y + toolbar!.height)).toBeLessThanOrEqual(2);
     await expect(nav.getByRole('button')).toHaveCount(6);
     const navRects = await nav.getByRole('button').evaluateAll(nodes => nodes.map(node => node.getBoundingClientRect().toJSON()));
     for (const r of navRects) { expect(r.x).toBeGreaterThanOrEqual(0); expect(r.right).toBeLessThanOrEqual(width); }
@@ -81,6 +85,18 @@ test('投影大字实际放大正文且不自动授予教师解锁；设置与�
   await modal.getByRole('button', { name: '关闭', exact: true }).click();
   await expect(toggle).toHaveAttribute('aria-pressed', 'false');
   expect(await size()).toBe(before);
+});
+
+test('教师模式不恢复页首提示条，审校说明仍可从页脚查看', async ({ page }) => {
+  await page.goto('./');
+  await page.getByRole('button', { name: '设置与教师模式', exact: true }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByRole('checkbox', { name: /开启教师演示模式/ }).check();
+  await dialog.getByRole('button', { name: '关闭', exact: true }).click();
+  await expect(page.getByTestId('teacher-mode-badge')).toBeVisible();
+  await expect(page.getByRole('banner')).not.toContainText(/版本适配仅供参考|尚未经教师审校/);
+  await page.getByRole('contentinfo').getByRole('button', { name: '关于与审校说明' }).click();
+  await expect(dialog).toContainText('尚未经教师审校');
 });
 
 test('首页保留上传与拍照入口；相机不可用时能改为文件选择', async ({ page }) => {

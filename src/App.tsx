@@ -445,11 +445,6 @@ export const App: React.FC = () => {
             </button>
           </div>
         </div>
-
-        <div className="edition-notice-bar">
-          版本适配仅供参考，以所用教材为准 · 知识库当前状态：AI 整理，尚未经教师审校
-          {state.teacherMode.enabled && ' · 教师快捷键：Alt + ← / → 切换步骤'}
-        </div>
       </header>
 
       <nav className="stepper-bar" aria-label="学习步骤导航">

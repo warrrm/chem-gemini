@@ -20,4 +20,4 @@ npm run build:pages && npm run test:pages
 
 ## 发布与回退
 
-P0 展示版标签为 `v2.0.0-p0`，原 P0 保留在 `main`、`p0-stable`、`v1.0.0-p0`（`7915a15`）。本分支不部署单版本站点。推送并测试展示版源码后，在 [`p1-release` 的双版本流水线](https://github.com/warrrm/chem-gemini/blob/p1-release/.github/workflows/p1-pages.yml) 固定要发布的 P0 完整提交；发布包将 P0 放在根目录、P1 放在 `p1/`。上线后可核对 [发布清单](https://warrrm.github.io/chem-gemini/release-manifest.json)。旧版构建方式和回退说明见 [发布分支文档](https://github.com/warrrm/chem-gemini/blob/p1-release/docs/P1-发布说明.md)。
+P0 展示版标签为 `v2.0.1-p0`（页首不再显示常驻提示，审校说明仍可从页脚查看），原 P0 保留在 `main`、`p0-stable`、`v1.0.0-p0`（`7915a15`）。本分支不部署单版本站点。推送并测试展示版源码后，在 [`p1-release` 的双版本流水线](https://github.com/warrrm/chem-gemini/blob/p1-release/.github/workflows/p1-pages.yml) 固定要发布的 P0 完整提交；发布包将 P0 放在根目录、P1 放在 `p1/`。上线后可核对 [发布清单](https://warrrm.github.io/chem-gemini/release-manifest.json)。旧版构建方式和回退说明见 [发布分支文档](https://github.com/warrrm/chem-gemini/blob/p1-release/docs/P1-发布说明.md)。

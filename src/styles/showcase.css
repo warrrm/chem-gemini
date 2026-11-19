@@ -44,7 +44,6 @@ a { color: var(--primary); }
 .projector-toggle, .cover-primary, .cover-action, .sample-start { display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; font-weight: 700; }
 .projector-toggle { padding: 7px 12px; border: 1px solid #a8b9ad; border-radius: var(--radius-sm); background: transparent; color: var(--ink); font-size: 13px; }
 .projector-toggle[aria-pressed='true'] { color: #fff; background: var(--ink); border-color: var(--ink); }
-.edition-notice-bar { color: var(--text-muted); background: #f5f6ef; border-color: #e0e5db; }
 
 /* 步骤不是六个相同的主按钮：双栏数字、当前页底线和锁图标分别表示顺序、位置和门禁。 */
 .stepper-bar { background: #fffefa; overflow: visible; }
@@ -180,7 +179,6 @@ a { color: var(--primary); }
   .edition-selector label { position: absolute; clip-path: inset(50%); width: 1px; height: 1px; overflow: hidden; }
   .navbar-controls > .btn-secondary { grid-area: 2 / 3; }
   .teacher-pill { grid-area: 3 / 1 / 4 / -1; justify-self: start; }
-  .edition-notice-bar { font-size: 11px; }
   .stepper-list { grid-template-columns: repeat(3, minmax(0, 1fr)); padding-block: 3px; }
   .stepper-btn { min-height: 37px; gap: 6px; padding: 5px 3px; font-size: 12px; }
   .stepper-btn .atlas-icon { width: 11px; height: 11px; }
