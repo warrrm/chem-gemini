@@ -3,6 +3,8 @@ import { AIModelPanel } from './components/AIModelPanel';
 import { CameraCaptureModal } from './components/CameraCaptureModal';
 import { OnlineSettingsModal, ThirdPartyConsentModal } from './components/P1Modals';
 import { SampleIllustration } from './components/SampleIllustration';
+import { ShowcaseHome } from './components/ShowcaseHome';
+import { ShowcaseIcon } from './components/ShowcaseIcon';
 import { StepFormulaGate } from './components/StepFormulaGate';
 import {
   StepKnowledgeCard,
@@ -11,7 +13,7 @@ import {
 } from './components/StepUnlockedPanels';
 import { DEMO_SAMPLES } from './data/samples';
 import { SUBSTANCES, SUBSTANCE_BY_ID } from './data/substances';
-import { formatFormulaPreview } from './modules/formula/parser';
+import { StudyPreview } from './components/StudyPreview';
 import {
   demoProvider,
   LLMTextAssistProvider,
@@ -38,12 +40,12 @@ import {
 } from './types/chemistry';
 
 const STEPS: { step: LearningStep; shortTitle: string; fullTitle: string }[] = [
-  { step: 1, shortTitle: '1. 上传预览', fullTitle: '1. 图片上传与预览' },
-  { step: 2, shortTitle: '2. 确认名称', fullTitle: '2. 候选物质与名称确认' },
-  { step: 3, shortTitle: '3. 书写化学式', fullTitle: '3. 推导并书写化学式' },
-  { step: 4, shortTitle: '4. 知识卡片', fullTitle: '4. 物质知识卡片' },
-  { step: 5, shortTitle: '5. 反应方程式', fullTitle: '5. 相关反应方程式' },
-  { step: 6, shortTitle: '6. 随堂练习', fullTitle: '6. 随堂练习与反馈' },
+  { step: 1, shortTitle: '上传预览', fullTitle: '图片上传与预览' },
+  { step: 2, shortTitle: '确认名称', fullTitle: '候选物质与名称确认' },
+  { step: 3, shortTitle: '书写化学式', fullTitle: '推导并书写化学式' },
+  { step: 4, shortTitle: '知识卡片', fullTitle: '物质知识卡片' },
+  { step: 5, shortTitle: '反应方程式', fullTitle: '相关反应方程式' },
+  { step: 6, shortTitle: '随堂练习', fullTitle: '随堂练习与反馈' },
 ];
 
 const EDITIONS: TextbookEdition[] = ['通用版', '人教版', '沪教版', '鲁教版'];
@@ -75,6 +77,15 @@ export const App: React.FC = () => {
   const [manualFeedback, setManualFeedback] = useState<string | null>(null);
   const [manualFeedbackType, setManualFeedbackType] = useState<'info' | 'warn'>('warn');
   const [isSearchingText, setIsSearchingText] = useState(false);
+
+  const workspaceRef = useRef<HTMLElement | null>(null);
+  const previousStep = useRef(state.currentStep);
+  useEffect(() => {
+    if (previousStep.current === state.currentStep) return;
+    previousStep.current = state.currentStep;
+    workspaceRef.current?.focus({ preventScroll: true });
+    window.scrollTo(0, 0);
+  }, [state.currentStep]);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const previousBlobUrlRef = useRef<string | null>(null);
@@ -342,14 +353,10 @@ export const App: React.FC = () => {
     return Array.from(ids);
   }, [state.recognitionResult, manualMatches]);
 
-  const hasMediaPreview =
-    state.imageSourceType !== 'none' &&
-    (Boolean(activeSample) || Boolean(state.uploadedImageUrl));
-
   const shellClasses = [
     'app-shell',
     state.teacherMode.enabled ? 'is-teacher-mode' : '',
-    state.teacherMode.enabled && state.teacherMode.projectorLargeText
+    state.teacherMode.projectorLargeText
       ? 'is-projector-large'
       : '',
   ]
@@ -362,11 +369,13 @@ export const App: React.FC = () => {
         ref={fileInputRef}
         type="file"
         accept="image/*"
+        tabIndex={-1}
         className="sr-only"
         onChange={handleFileChange}
         data-testid="image-file-input"
       />
 
+      <a className="skip-to-content" href="#workspace">跳至学习内容</a>
       <header className="top-navbar">
         <div className="navbar-inner">
           <div className="brand-block">
@@ -377,11 +386,11 @@ export const App: React.FC = () => {
               title="返回首页"
             >
               <span className="brand-icon" aria-hidden="true">
-                ⚗️
+                <ShowcaseIcon name="flask"/>
               </span>
               <span className="brand-texts">
-                <strong className="brand-title">化学识物小课堂 · P1</strong>
-                <span className="brand-slogan">从一张照片，认识一种物质</span>
+                <strong className="brand-title">化学识物小课堂</strong>
+                <span className="brand-slogan">P0 · 课堂展示版</span>
               </span>
             </button>
           </div>
@@ -394,7 +403,7 @@ export const App: React.FC = () => {
               title="管理在线识图、离线演示、API 连接与教师演示设置"
               data-testid="run-mode-badge"
             >
-              {isOnlineModeActive ? `在线增强 · ${activeEngineLabel}` : '演示模式'}
+              {isOnlineModeActive ? <>在线识图<span className="engine-detail"> · {activeEngineLabel}</span></> : '演示模式'}
             </button>
 
             {state.teacherMode.enabled && (
@@ -423,20 +432,16 @@ export const App: React.FC = () => {
               </select>
             </div>
 
+            <button type="button" className="projector-toggle" aria-pressed={state.teacherMode.projectorLargeText}
+              onClick={() => dispatch({ type: 'UPDATE_TEACHER_MODE', patch: { projectorLargeText: !state.teacherMode.projectorLargeText } })}>
+              <ShowcaseIcon name="projector"/> 投影大字
+            </button>
             <button
               type="button"
               className="btn-secondary btn-sm"
               onClick={() => setSettingsOpen(true)}
             >
               设置与教师模式
-            </button>
-
-            <button
-              type="button"
-              className="btn-ghost btn-sm"
-              onClick={() => setAboutOpen(true)}
-            >
-              关于与审校说明
             </button>
           </div>
         </div>
@@ -463,6 +468,7 @@ export const App: React.FC = () => {
                 <button
                   type="button"
                   aria-current={isCurrent ? 'step' : undefined}
+                  aria-label={`${item.step}. ${item.fullTitle}${unlocked ? '' : '，尚未解锁'}`}
                   className={`stepper-btn ${isCurrent ? 'is-current' : ''} ${
                     unlocked ? 'is-unlocked' : 'is-locked'
                   } ${isDone ? 'is-done' : ''}`}
@@ -470,11 +476,10 @@ export const App: React.FC = () => {
                     dispatch({ type: 'NAVIGATE_STEP', step: item.step })
                   }
                 >
-                  <span className="step-num">
-                    {!unlocked && item.step >= 4 ? '🔒' : item.step}
-                  </span>
+                  <span className="step-num" aria-hidden="true">0{item.step}</span>
                   <span className="step-label-full">{item.fullTitle}</span>
                   <span className="step-label-short">{item.shortTitle}</span>
+                  {!unlocked && <ShowcaseIcon name="lock"/>}
                 </button>
               </li>
             );
@@ -497,153 +502,13 @@ export const App: React.FC = () => {
         </div>
       )}
 
-      <main className="container main-workspace">
+      <main id="workspace" ref={workspaceRef} tabIndex={-1} className="container main-workspace">
         {state.currentStep === 1 ? (
-          <div className="home-layout">
-            <section className="hero-card">
-              <div className="hero-badge">
-                初中化学互动学习 · 六步闯关识物 · {activeEngineLabel}
-              </div>
-              <h1>从一张照片，认识一种物质</h1>
-              <p className="hero-desc">
-                拍照或上传身边的化学试剂、矿石标本或实验器材照片，先辨认物质名称，再通过微观粒子图与元素质量比推导书写化学式，解锁知识卡片、反应方程式与随堂练习。
-              </p>
-
-              <div className="hero-actions">
-                <button
-                  type="button"
-                  className="btn-primary btn-lg"
-                  onClick={() => setCameraOpen(true)}
-                >
-                  📷 拍照识物
-                </button>
-                <button
-                  type="button"
-                  className="btn-secondary btn-lg"
-                  onClick={triggerUploadPicker}
-                >
-                  🖼️ 上传图片
-                </button>
-              </div>
-
-              <p className="privacy-note">
-                隐私说明：图片预览仅保留在当前页面内存中；默认由 DeepSeek V4.1 Flash 识图，发送前需你授权。默认 Key 仅由本机服务端保管；自备 API Key 仅存当前标签页 sessionStorage。
-              </p>
-            </section>
-
-            {/* 可视化 AI 辅助模型选择与 API 提交面板（直接展示在首页） */}
+          <ShowcaseHome onCamera={() => setCameraOpen(true)} onUpload={triggerUploadPicker} onSelectSample={handleSelectSample}>
             <AIModelPanel config={aiConfig} onSaveConfig={handleUpdateAIConfig} />
-
-            <section className="samples-section" aria-labelledby="samples-heading">
-              <div className="section-head">
-                <h2 id="samples-heading">试试内置样例（一键体验 5 大典型教学场景）</h2>
-                <p>覆盖清晰标签溶液、纯净物、无标签未知液体、混合物、多物体识别与超纲物质：</p>
-              </div>
-
-              <div className="samples-grid">
-                {DEMO_SAMPLES.map((sample) => (
-                  <article key={sample.id} className="sample-card">
-                    <SampleIllustration svgKind={sample.svgKind} compact />
-                    <div className="sample-card-body">
-                      <span className="sample-badge">{sample.categoryBadge}</span>
-                      <h3>{sample.title}</h3>
-                      <p>{sample.description}</p>
-                      <button
-                        type="button"
-                        className="btn-primary btn-block"
-                        onClick={() => handleSelectSample(sample)}
-                      >
-                        使用此样例开始学习
-                      </button>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            </section>
-          </div>
+          </ShowcaseHome>
         ) : (
           <div className="study-two-col">
-            <aside className="study-sidebar" aria-label="当前学习对象状态">
-              <div className="card sidebar-card">
-                <div className="sidebar-card-head">
-                  <h3>当前图片预览</h3>
-                  <div className="sidebar-mini-actions">
-                    <button
-                      type="button"
-                      className="btn-ghost btn-xs"
-                      onClick={() => setCameraOpen(true)}
-                    >
-                      重拍
-                    </button>
-                    <button
-                      type="button"
-                      className="btn-ghost btn-xs"
-                      onClick={triggerUploadPicker}
-                    >
-                      换图
-                    </button>
-                    <button
-                      type="button"
-                      className="btn-ghost btn-xs"
-                      onClick={handleResetAll}
-                    >
-                      换样例
-                    </button>
-                  </div>
-                </div>
-
-                {hasMediaPreview ? (
-                  activeSample ? (
-                    <SampleIllustration svgKind={activeSample.svgKind} compact />
-                  ) : (
-                    state.uploadedImageUrl && (
-                      <div className="uploaded-preview-box">
-                        <img
-                          src={state.uploadedImageUrl}
-                          alt={state.uploadedFileName ?? '用户上传的图片预览'}
-                          className="uploaded-preview-img"
-                        />
-                        <div className="sample-caption">
-                          本地图片预览（仅当前会话内存保存）
-                        </div>
-                      </div>
-                    )
-                  )
-                ) : (
-                  <div className="empty-preview-box">暂无图片</div>
-                )}
-
-                <div className="sidebar-status-box">
-                  <div className="sidebar-status-row">
-                    <span className="status-label">已确认名称：</span>
-                    <strong className="status-val">
-                      {confirmedSubstance ? confirmedSubstance.name : '尚未确认'}
-                    </strong>
-                  </div>
-
-                  <div className="sidebar-status-row">
-                    <span className="status-label">化学式状态：</span>
-                    {confirmedSubstance ? (
-                      isFormulaUnlocked ? (
-                        <strong
-                          className="status-val is-unlocked-text"
-                          data-testid="sidebar-formula-revealed"
-                        >
-                          {formatFormulaPreview(confirmedSubstance.formula)}（已解锁）
-                        </strong>
-                      ) : (
-                        <span className="status-val is-locked-text">
-                          待推导书写（解锁后显示）
-                        </span>
-                      )
-                    ) : (
-                      <span className="status-val is-muted-text">—</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </aside>
-
             <div className="study-main-col">
               {state.currentStep === 2 && (
                 <section className="card step-card" aria-labelledby="step2-title">
@@ -943,9 +808,17 @@ export const App: React.FC = () => {
                 />
               )}
             </div>
+            <StudyPreview sample={activeSample} imageUrl={state.uploadedImageUrl} fileName={state.uploadedFileName}
+              substance={confirmedSubstance} verified={isFormulaUnlocked} onCamera={() => setCameraOpen(true)}
+              onUpload={triggerUploadPicker} onReset={handleResetAll}/>
           </div>
         )}
       </main>
+
+      <footer className="atlas-footer container">
+        <span>化学识物小课堂 <b>/</b> P0 课堂展示版</span>
+        <button type="button" className="btn-ghost btn-sm" onClick={() => setAboutOpen(true)}>关于与审校说明</button>
+      </footer>
 
       <CameraCaptureModal
         isOpen={cameraOpen}

@@ -249,9 +249,9 @@ export const AIModelPanel: React.FC<AIModelPanelProps> = ({
 
       {IS_STATIC_HOSTING && (
         <div className="status-banner is-info" role="note" data-testid="static-hosting-notice">
-          <strong>P1 · GitHub Pages 静态版</strong>：此网页不包含本机默认 Key 或密钥网关。
+          <strong>P0 课堂展示版 · 静态网页</strong>：此网页不包含本机默认 Key 或密钥网关。
           在线识图请填写自备 API Key（接口需允许浏览器跨域）；内置样例和本地搜索无需 Key。
-          {' '}<a href="../">查看独立保留的 P0 版本</a>
+          {' '}<a href="./p1/">前往 P1 学习版</a>
         </div>
       )}
 

@@ -1,0 +1,210 @@
+/* P0 课堂展示版：沿用教学组件，版式采用标本图鉴的墨绿、纸色与图版编号。 */
+:root {
+  --ink: #183b36;
+  --paper: #f7f6f0;
+  --gold: #efd398;
+  --bg-page: var(--paper);
+  --bg-soft-blue: #edf4ee;
+  --bg-soft-green: #ebf6ed;
+  --primary: #21624f;
+  --primary-hover: #174b3c;
+  --primary-light: #dcebe0;
+  --accent-green: #176843;
+  --text-main: #1e332e;
+  --text-sub: #455b53;
+  --text-muted: #54665e;
+  --border: #ccd6cc;
+  --shadow-sm: 0 3px 12px rgb(36 63 50 / 5%);
+  --shadow-md: 0 8px 24px rgb(36 63 50 / 9%);
+  --serif: 'Songti SC', 'STSong', 'Noto Serif CJK SC', 'Source Han Serif SC', 'SimSun', Georgia, serif;
+  --mono: ui-monospace, 'SFMono-Regular', Consolas, monospace;
+  --gutter: clamp(16px, 3vw, 44px);
+}
+button, input, select, textarea { font-family: inherit; }
+a { color: var(--primary); }
+:where(button, a, select, input, textarea, [tabindex]):focus-visible { outline: 3px solid #99600b; outline-offset: 3px; }
+.main-workspace:focus { outline: none; }
+.skip-to-content { position: fixed; left: 10px; top: 8px; z-index: 90; background: white; padding: 8px; transform: translateY(-160%); }
+.skip-to-content:focus { transform: none; }
+.container, .navbar-inner, .stepper-list { max-width: 1280px; padding-inline: var(--gutter); }
+.atlas-icon { flex: none; }
+.top-navbar { background: #fffefa; position: static; }
+.navbar-inner { padding-block: 11px; }
+.brand-btn { gap: 11px; }
+.brand-icon { background: var(--ink); color: var(--gold); border-radius: 10px 10px 10px 2px; }
+.brand-icon svg { width: 27px; height: 27px; }
+.brand-title { color: var(--ink); font: 750 21px/1.35 var(--serif); letter-spacing: .04em; }
+.brand-slogan { font-size: 11px; font-weight: 650; letter-spacing: .12em; }
+.navbar-controls { gap: 14px; }
+.mode-badge.is-online, .ai-active-pill.is-online { background: #edf3eb; color: #25533c; border-color: #96b29d; }
+.navbar-controls .mode-badge { max-width: 350px; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.mode-badge.is-demo, .ai-active-pill.is-demo { color: #24503c; border-color: #acc9b6; background: #e5f2e8; }
+.btn-secondary, .formula-input, .candidate-name-btn { border-color: #9cb9a7; }
+.btn-secondary:hover:not(:disabled) { background: #e8f1e8; }
+.projector-toggle, .cover-primary, .cover-action, .sample-start { display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; font-weight: 700; }
+.projector-toggle { padding: 7px 12px; border: 1px solid #a8b9ad; border-radius: var(--radius-sm); background: transparent; color: var(--ink); font-size: 13px; }
+.projector-toggle[aria-pressed='true'] { color: #fff; background: var(--ink); border-color: var(--ink); }
+.edition-notice-bar { color: var(--text-muted); background: #f5f6ef; border-color: #e0e5db; }
+
+/* 步骤不是六个相同的主按钮：双栏数字、当前页底线和锁图标分别表示顺序、位置和门禁。 */
+.stepper-bar { background: #fffefa; overflow: visible; }
+.stepper-list { grid-template-columns: repeat(6, minmax(0,1fr)); gap: 0; padding-block: 0; }
+.stepper-item { min-width: 0; }
+.stepper-btn { justify-content: flex-start; position: relative; min-height: 55px; height: 100%; padding: 9px 8px; gap: 8px; border: 0; border-bottom: 3px solid transparent; border-radius: 0; background: transparent; color: var(--text-sub); transition: none; }
+.step-num { color: #677b70; font: 550 12px/1 var(--mono); }
+.stepper-btn .atlas-icon { width: 13px; height: 13px; }
+.stepper-btn.is-locked { opacity: 1; color: #637068; background: transparent; }
+.stepper-btn.is-current { color: var(--ink); background: #eaf1e8; border-color: var(--primary); box-shadow: none; }
+.stepper-btn.is-current .step-num, .stepper-btn.is-done .step-num { color: var(--primary); font-weight: 800; }
+.stepper-btn.is-done:not(.is-current) { color: var(--primary); background: transparent; border-color: #adc4b3; }
+.stepper-btn:hover { background: #f0f3ec; }
+.main-workspace { padding-top: clamp(18px, 2vw, 28px); }
+
+/* 封面与标本图版 */
+.atlas-kicker, .plate-topline, .plate-index { font: 650 11px/1.5 var(--mono); letter-spacing: .14em; }
+.atlas-kicker { display: flex; align-items: center; gap: 10px; margin: 0; color: var(--primary); }
+.atlas-kicker i { display: inline-block; width: 26px; height: 1px; background: currentColor; opacity: .7; }
+.atlas-cover { --cover-pad: clamp(22px, 3.5vw, 48px); position: relative; isolation: isolate; display: grid; grid-template-columns: minmax(0, 1.18fr) minmax(0, .82fr); align-items: center; gap: var(--cover-pad); padding: var(--cover-pad); border-radius: 19px; background: linear-gradient(112deg, #143b35 15%, #153d37 53%, #244d42 100%); color: #fffdf2; }
+.atlas-cover::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background-image: linear-gradient(90deg, transparent calc(100% - 1px), #b5d6c00b 1px), linear-gradient(transparent calc(100% - 1px), #b5d6c00b 1px); background-size: 26px 26px; }
+.cover-kicker { color: #e7d29f; font-size: 12px; }
+.atlas-cover h1 { margin: 15px 0 10px; color: #fffdf0; font: 700 clamp(40px, 4.2vw, 63px)/1.17 var(--serif); letter-spacing: .025em; }
+.atlas-cover h1 em { display: block; font-style: normal; color: #ebd39f; }
+.cover-deck { margin: 0 0 20px; color: #e3ede1; line-height: 1.7; font-size: clamp(15px, 1.15vw, 18px); }
+.cover-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.cover-primary, .cover-action { min-height: 43px; padding: 9px 13px; border-radius: 7px; font-size: 14px; line-height: 1.4; }
+.cover-primary { background: var(--gold); border: 1px solid var(--gold); color: #1e352c; }
+.cover-primary:hover { background: #ffe6ae; }
+.cover-action { background: #163d36; border: 1px solid #779487; color: #f1f5ed; }
+.cover-action:hover { background: #2e564a; }
+.cover-actions .atlas-icon { width: 17px; height: 17px; }
+.atlas-cover :focus-visible { outline-color: #ffedbc; }
+.cover-note { color: #c4d5c9; font-size: 12px; margin: 12px 0 0; }
+.specimen-plate { display: grid; align-content: space-between; min-width: 0; margin: 0; padding: 12px 16px; border: 1px solid #759184; border-radius: 2px; background: #183c363d; }
+.plate-topline, .specimen-plate figcaption { display: flex; gap: 8px; align-items: center; justify-content: space-between; color: #d7e3d8; }
+.plate-topline { font-size: 10px; letter-spacing: .15em; }
+.plate-art { display: block; width: 100%; max-height: 200px; }
+.specimen-plate figcaption { border-top: 1px solid #769286; padding-top: 8px; font-size: 11px; }
+.specimen-plate figcaption div { display: flex; align-items: baseline; gap: 8px; }
+.specimen-plate figcaption strong { order: -1; font: 700 19px/1.5 var(--serif); color: #fff9e7; }
+.specimen-plate figcaption small { font-size: 11px; }
+
+/* 样例在配置之前，课堂打开首页即可选图。 */
+.samples-section, .home-layout > .ai-panel-card { margin-top: clamp(32px, 3.5vw, 50px); }
+.collection-heading { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 8px 24px; margin-bottom: 17px; }
+.collection-heading h2 { font: 750 clamp(28px, 2.6vw, 39px)/1.35 var(--serif); color: var(--ink); margin: 4px 0 0; }
+.collection-heading > p { margin: 0; color: var(--text-sub); font-size: 14px; }
+.samples-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.sample-card { border-color: #d2dace; border-radius: 10px; background: #fffefa; }
+.sample-mat { position: relative; background: #eef1e9; border-bottom: 1px solid var(--border); }
+.sample-mat .sample-illustration-wrap { background: none; border: 0; }
+.sample-mat .sample-svg-stage { padding: 10px 18px 2px; }
+.sample-mat .sample-svg { max-height: 150px; margin: auto; }
+.sample-mat .sample-svg > rect:first-child { fill: transparent; }
+.sample-mat .sample-svg > rect:nth-child(2) { fill: #dce4da; }
+.sample-mat .sample-caption { background: transparent; text-align: right; color: #53655a; font-size: 10px; }
+.plate-index { position: absolute; z-index: 1; left: 12px; top: 10px; font-size: 10px; color: #315845; }
+.sample-card-body { padding: clamp(15px, 1.45vw, 22px); }
+.sample-badge { padding: 0; margin-bottom: 5px; border-radius: 0; color: var(--primary); background: transparent; letter-spacing: .035em; }
+.sample-card h3 { font: 700 20px/1.45 var(--serif); }
+.sample-card-body p { font-size: 14px; }
+.sample-start { margin-top: auto; padding: 10px 0 0; justify-content: space-between; text-align: left; color: var(--primary); background: transparent; border: 0; border-top: 1px solid var(--border); font-size: 14px; min-height: 40px; }
+.sample-start:hover { color: #133f2f; text-decoration: underline; }
+.ai-panel-card, .ai-panel-card.is-compact { border-color: var(--border); }
+.ai-panel-header h2 { font-size: 21px; }
+.ai-panel-status-wrap { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.ai-inline-grid, .settings-grid, .ai-preset-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); }
+.form-field, .form-field :is(input, select), .key-input-wrap { min-width: 0; max-width: 100%; }
+.smart-import-textarea { width: 100%; }
+.atlas-footer { display: flex; align-items: center; flex-wrap: wrap; justify-content: space-between; gap: 10px; padding-block: 18px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-sub); }
+.atlas-footer b { margin: 0 7px; color: #778a7c; }
+
+/* 学习工作台：把观察对象和作答区分开，化学图的键型、颜色和比例保留原定义。 */
+.study-two-col { grid-template-areas: 'preview lesson'; grid-template-columns: minmax(225px, .33fr) minmax(0, 1fr); gap: clamp(16px, 2.1vw, 28px); }
+.study-main-col, .study-sidebar { min-width: 0; }
+.study-main-col { grid-area: lesson; }
+.study-sidebar { grid-area: preview; top: 16px; }
+.card { border-color: var(--border); }
+.step-card { padding: clamp(18px, 2.4vw, 34px); }
+.step-header-row { align-items: center; margin-bottom: 20px; padding-bottom: 16px; }
+.step-header-row h2 { font: 700 clamp(24px, 2.2vw, 34px)/1.35 var(--serif); color: var(--ink); }
+.step-badge { font-size: 13px; padding: 0; background: transparent; color: var(--primary); letter-spacing: .08em; }
+.sidebar-card { background: #f1f3eb; }
+.sidebar-card-head { flex-wrap: wrap; }
+.sidebar-status-box { background: #fffefa; }
+.status-banner.is-info, .choice-disclaimer-banner { border-color: #b7cfc0; background: var(--bg-soft-blue); color: #244e40; }
+.candidates-box, .ai-preset-card.is-selected { border-color: #98bca7; }
+.candidate-name-btn { gap: 7px; text-align: left; }
+.cand-action { flex-shrink: 0; }
+.clue-progress-note, .micro-note, .inquiry-scope-note { line-height: 1.75; }
+.clue-panel, .reaction-item-card, .detail-block:not(.is-concept) { background: #fffefa; }
+.mass-ratio-card, .knowledge-kv, .inquiry-header-card { background: #f1f4ed; }
+.quiz-stem, .target-instruction { font-size: 18px; }
+.knowledge-grid, .candidate-btn-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); }
+.equation-scroll-box { max-width: 100%; }
+.quiz-type-tabs .clue-tab { padding: 9px 13px; }
+.modal-card { max-height: 90vh; overflow-y: auto; }
+.app-shell.is-projector-large .cover-deck, .app-shell.is-projector-large :is(.quiz-stem, .target-instruction, .mass-ratio-formula) { font-size: 23px; }
+.app-shell.is-projector-large :is(.detail-block p, .uses-list, .reaction-meta-grid, .mcq-option-btn, .inquiry-scenario, .subq-prompt, .calculation-solution, .candidate-name-btn, .clue-progress-note) { font-size: 20px; }
+.app-shell.is-projector-large :is(.micro-desc, .micro-note, .micro-tile-caption, .micro-legend-item, .mass-ratio-note, .mass-chip) { font-size: 16px; }
+.app-shell.is-projector-large .equation-line { font-size: 26px; }
+.app-shell.is-projector-large .formula-hero { font-size: 36px; }
+
+@media (min-width: 1100px) and (min-height: 640px) {
+  .top-navbar { position: sticky; }
+  .study-sidebar { top: 110px; }
+  html { scroll-padding-top: 112px; }
+}
+@media (max-width: 1000px) {
+  .step-label-full { display: none; }
+  .step-label-short { display: inline; }
+  .atlas-cover { gap: 22px; }
+  .samples-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 800px) {
+  .study-two-col { display: flex; flex-direction: column; }
+  .study-main-col, .study-sidebar { width: 100%; }
+  .study-sidebar { position: static; }
+  .study-sidebar .sample-svg { max-height: 180px; }
+}
+@media (max-width: 700px) {
+  .navbar-inner { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 7px 8px; padding-block: 9px; }
+  .navbar-controls { display: contents; }
+  .brand-block { grid-area: 1 / 1 / 2 / 3; }
+  .brand-icon { width: 35px; height: 35px; }
+  .brand-icon svg { width: 23px; height: 23px; }
+  .brand-title { font-size: 18px; }
+  .projector-toggle { grid-area: 1 / 3; justify-self: end; }
+  .navbar-controls .mode-badge { grid-area: 2 / 1; justify-self: start; max-width: 100%; line-height: 1.35; }
+  .mode-badge .engine-detail { display: none; }
+  .edition-selector { grid-area: 2 / 2; }
+  .edition-selector label { position: absolute; clip-path: inset(50%); width: 1px; height: 1px; overflow: hidden; }
+  .navbar-controls > .btn-secondary { grid-area: 2 / 3; }
+  .teacher-pill { grid-area: 3 / 1 / 4 / -1; justify-self: start; }
+  .edition-notice-bar { font-size: 11px; }
+  .stepper-list { grid-template-columns: repeat(3, minmax(0, 1fr)); padding-block: 3px; }
+  .stepper-btn { min-height: 37px; gap: 6px; padding: 5px 3px; font-size: 12px; }
+  .stepper-btn .atlas-icon { width: 11px; height: 11px; }
+  .step-num { font-size: 11px; }
+  .atlas-cover { grid-template-columns: 1fr; gap: 17px; border-radius: 14px; }
+  .atlas-cover h1 { font-size: clamp(36px, 8.6vw, 51px); }
+  .specimen-plate { grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto 1fr; padding: 9px 12px; align-items: center; }
+  .plate-topline { grid-area: 1 / 1 / 2 / 3; }
+  .plate-art { grid-area: 2 / 1; max-height: 108px; }
+  .specimen-plate figcaption { display: grid; gap: 4px; border: 0; padding: 0; }
+  .specimen-plate figcaption div { display: grid; gap: 1px; }
+}
+@media (max-width: 540px) {
+  .samples-grid { grid-template-columns: 1fr; gap: 13px; }
+  .collection-heading > p br { display: none; }
+  .cover-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+  .cover-actions .cover-primary { grid-column: 1 / -1; justify-content: space-between; padding-inline: 14px; }
+  .cover-primary, .cover-action { font-size: 13px; padding: 8px 9px; gap: 5px; }
+  .sidebar-mini-actions { flex-wrap: wrap; }
+  .quiz-type-tabs .clue-tab { padding: 8px; }
+  .text-input, .formula-input { min-width: min(100%, 170px); }
+  .modal-card { padding: 15px; }
+  .settings-section, .ai-inline-form { padding: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0s !important; }
+}

@@ -229,9 +229,23 @@ describe('Session config persistence and migration', () => {
     expect(storage.size).toBe(0);
   });
 
+  it('never reads, overwrites or clears P1 credentials and consent on the shared Pages origin', () => {
+    const storage = setupStorage();
+    const p1Keys = ['chem_gemini_p1_online_config_v1', 'chem_gemini_p1_online_config_v2'];
+    const seeded = JSON.stringify({ ...visionConfig(), credentialSource: 'session', apiKey: 'dummy-p1-only', imageUploadConsented: true });
+    for (const key of p1Keys) storage.set(key, seeded);
+    expect(loadOnlineAIConfig()).toEqual(DEFAULT_ONLINE_AI_CONFIG);
+    saveOnlineAIConfig({ ...visionConfig(), credentialSource: 'session', apiKey: 'dummy-p0-only' });
+    expect(loadOnlineAIConfig().apiKey).toBe('dummy-p0-only');
+    for (const key of p1Keys) expect(storage.get(key)).toBe(seeded);
+    clearOnlineAIConfig();
+    expect([...storage.keys()]).toEqual(p1Keys);
+    for (const key of p1Keys) expect(storage.get(key)).toBe(seeded);
+  });
+
   it('migrates old DeepSeek settings to vision and resets old image consent', () => {
     const storage = setupStorage();
-    storage.set('chem_gemini_p1_online_config_v1', JSON.stringify({
+    storage.set('chem_gemini_p0_online_config_v1', JSON.stringify({
       enabled: true, providerPreset: 'deepseek', providerMode: 'text_assist',
       baseURL: 'https://api.deepseek.com/v1', model: 'deepseek-chat', apiKey: 'dummy-legacy-key', imageUploadConsented: true,
     }));
@@ -245,7 +259,7 @@ describe('Session config persistence and migration', () => {
 
   it('falls back to safe defaults on corrupt stored JSON', () => {
     const storage = setupStorage();
-    storage.set('chem_gemini_p1_online_config_v2', 'invalid-json');
+    storage.set('chem_gemini_p0_online_config_v2', 'invalid-json');
     expect(loadOnlineAIConfig()).toEqual(DEFAULT_ONLINE_AI_CONFIG);
   });
 });

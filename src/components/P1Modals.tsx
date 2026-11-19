@@ -131,7 +131,7 @@ export const OnlineSettingsModal: React.FC<OnlineSettingsModalProps> = ({
     >
       <div className="modal-card modal-card-lg">
         <div className="modal-header">
-          <h3 id="settings-modal-title">运行模式与课堂设置（P1 正式版）</h3>
+          <h3 id="settings-modal-title">运行模式与课堂设置（P0 展示版）</h3>
           <button type="button" className="btn-ghost btn-sm" onClick={onClose}>
             关闭
           </button>
@@ -306,12 +306,11 @@ export const OnlineSettingsModal: React.FC<OnlineSettingsModalProps> = ({
                 <input
                   type="checkbox"
                   checked={teacherMode.projectorLargeText}
-                  disabled={!teacherMode.enabled}
                   onChange={(e) =>
                     onUpdateTeacherMode({ projectorLargeText: e.target.checked })
                   }
                 />
-                <span>教室投影大字号模式（增大化学式、方程式与选项字号，便于后排学生观看）</span>
+                <span>投影大字（与页首开关同步，仅调整字号，不开启教师解锁）</span>
               </label>
 
               <label className="consent-checkbox-row">

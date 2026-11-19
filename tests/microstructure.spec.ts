@@ -11,7 +11,7 @@ const testEndpoint = 'https://example.invalid/v1';
 const diagramsToReview = new Set(['h2o2', 'h2so4', 'h2co3', 'h2o', 'co2', 'ch4', 'dilute_hcl', 'naoh', 'fe', 'limestone', 'cuso4_solution', 'caoh2', 'fe3o4', 'cuno32', 's', 'c']);
 
 async function captureDiagram(page: Page, id: string) {
-  const screenshots = process.env.P1_DIAGRAM_SCREENSHOTS;
+  const screenshots = process.env.P0_DIAGRAM_SCREENSHOTS;
   if (!screenshots || !diagramsToReview.has(id)) return;
   await diagram(page).screenshot({
     path: join(screenshots, `${id}-${page.viewportSize()?.width}.png`),
@@ -62,7 +62,7 @@ test.beforeEach(async ({ page }) => {
 
 test.describe('内置演示样例的微观图', () => {
   test.beforeEach(async ({ page }) => {
-    await page.addInitScript(() => sessionStorage.setItem('chem_gemini_p1_online_config_v2', JSON.stringify({
+    await page.addInitScript(() => sessionStorage.setItem('chem_gemini_p0_online_config_v2', JSON.stringify({
       enabled: false, providerPreset: 'demo', providerMode: 'vision', baseURL: 'https://api.deepseek.com/v1', model: 'deepseek-flash',
       credentialSource: 'session', apiKey: '', imageUploadConsented: false,
     })));
@@ -108,7 +108,7 @@ for (let i = 0; i < ALL_SUBSTANCES.length; i += batchSize) {
   const batch = ALL_SUBSTANCES.slice(i, i + batchSize);
   test(`模拟识图后检查微观图、键连、电荷和可见范围（第 ${i / batchSize + 1} 组）`, async ({ page }) => {
     test.setTimeout(60_000);
-    await page.addInitScript(({ baseURL }) => sessionStorage.setItem('chem_gemini_p1_online_config_v2', JSON.stringify({
+    await page.addInitScript(({ baseURL }) => sessionStorage.setItem('chem_gemini_p0_online_config_v2', JSON.stringify({
       enabled: true, providerPreset: 'custom', providerMode: 'vision', baseURL, model: 'mock-vision',
       credentialSource: 'session', apiKey: 'dummy-test-key-not-real', imageUploadConsented: false,
     })), { baseURL: testEndpoint });

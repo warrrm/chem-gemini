@@ -13,9 +13,9 @@ async function openQuiz(page: Page) {
   await page.getByRole('button', { name: /6\..*练习/ }).click();
 }
 
-test.describe('P1 递进线索与三类并列练习', () => {
+test.describe('P0 递进线索与三类并列练习', () => {
   test.beforeEach(async ({ page }) => {
-    await page.addInitScript(() => sessionStorage.setItem('chem_gemini_p1_online_config_v2', JSON.stringify({
+    await page.addInitScript(() => sessionStorage.setItem('chem_gemini_p0_online_config_v2', JSON.stringify({
       enabled: false, providerPreset: 'demo', providerMode: 'vision',
       baseURL: 'https://api.deepseek.com/v1', model: 'deepseek-flash',
       credentialSource: 'server', apiKey: '', imageUploadConsented: false,

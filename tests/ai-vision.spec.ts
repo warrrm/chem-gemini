@@ -17,7 +17,7 @@ async function uploadLabel(page: Page) {
   await page.getByTestId('image-file-input').setInputFiles({ name: 'label.png', mimeType: 'image/png', buffer: Buffer.from(data, 'base64') });
 }
 
-test.describe('P1 DeepSeek V4.1 Flash 识图与 API 替换', () => {
+test.describe('P0 DeepSeek V4.1 Flash 识图与 API 替换', () => {
   test.beforeEach(async ({ page }) => {
     // 即使界面意外发起默认请求，也不能消耗本机真实 Key 的额度。
     await page.route('**/api/ai/chat/completions', async (route) => route.fulfill({ json: connectionReply }));
@@ -95,7 +95,7 @@ test.describe('P1 DeepSeek V4.1 Flash 识图与 API 替换', () => {
   });
 
   test('changing the provider revokes consent and never carries its old key across', async ({ page }) => {
-    await page.addInitScript(() => sessionStorage.setItem('chem_gemini_p1_online_config_v2', JSON.stringify({
+    await page.addInitScript(() => sessionStorage.setItem('chem_gemini_p0_online_config_v2', JSON.stringify({
       enabled: true, providerPreset: 'deepseek', providerMode: 'vision', baseURL: 'https://api.deepseek.com/v1',
       model: 'deepseek-flash', credentialSource: 'session', apiKey: 'dummy-old-provider-key', imageUploadConsented: true,
     })));
@@ -148,7 +148,7 @@ test.describe('P1 DeepSeek V4.1 Flash 识图与 API 替换', () => {
   });
 
   test('keeps legacy API configurations selected as online mode without exposing old preset cards', async ({ page }) => {
-    await page.addInitScript(() => sessionStorage.setItem('chem_gemini_p1_online_config_v2', JSON.stringify({
+    await page.addInitScript(() => sessionStorage.setItem('chem_gemini_p0_online_config_v2', JSON.stringify({
       enabled: true, providerPreset: 'opencode_vision', providerMode: 'vision', baseURL: 'https://opencode.ai/zen/v1',
       model: 'gpt-4o-mini', credentialSource: 'session', apiKey: 'dummy-legacy-api-key', imageUploadConsented: false,
     })));
@@ -177,13 +177,13 @@ test.describe('P1 DeepSeek V4.1 Flash 识图与 API 替换', () => {
     await dialog.getByRole('button', { name: '关闭', exact: true }).click();
     await expect(page.getByTestId('run-mode-badge')).toContainText('在线模型 (custom-vision-model)');
     await expect(page.locator('#panel-ai-baseurl')).toHaveValue('https://example.invalid/v1');
-    expect(await page.evaluate(() => JSON.parse(sessionStorage.getItem('chem_gemini_p1_online_config_v2')!))).toMatchObject({
+    expect(await page.evaluate(() => JSON.parse(sessionStorage.getItem('chem_gemini_p0_online_config_v2')!))).toMatchObject({
       providerPreset: 'custom', credentialSource: 'session', imageUploadConsented: false,
     });
   });
 
   test('switching offline and back online preserves the manually configured API', async ({ page }) => {
-    await page.addInitScript(() => sessionStorage.setItem('chem_gemini_p1_online_config_v2', JSON.stringify({
+    await page.addInitScript(() => sessionStorage.setItem('chem_gemini_p0_online_config_v2', JSON.stringify({
       enabled: true, providerPreset: 'custom', providerMode: 'vision', baseURL: 'https://example.invalid/v1',
       model: 'custom-vision-model', credentialSource: 'session', apiKey: 'dummy-switch-mode-key', imageUploadConsented: false,
     })));
@@ -196,7 +196,7 @@ test.describe('P1 DeepSeek V4.1 Flash 识图与 API 替换', () => {
     await expect(page.locator('#panel-ai-baseurl')).toHaveValue('https://example.invalid/v1');
     await expect(page.locator('#panel-ai-model')).toHaveValue('custom-vision-model');
     await expect(page.locator('#panel-ai-key')).toHaveValue('dummy-switch-mode-key');
-    expect(await page.evaluate(() => JSON.parse(sessionStorage.getItem('chem_gemini_p1_online_config_v2')!))).toMatchObject({
+    expect(await page.evaluate(() => JSON.parse(sessionStorage.getItem('chem_gemini_p0_online_config_v2')!))).toMatchObject({
       enabled: true, providerPreset: 'custom',
     });
   });

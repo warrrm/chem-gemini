@@ -11,19 +11,19 @@ async function uploadSyntheticLabel(page: Page) {
   await page.getByTestId('image-file-input').setInputFiles({ name: 'synthetic.png', mimeType: 'image/png', buffer: Buffer.from(data, 'base64') });
 }
 
-test.describe('P1 独立 GitHub Pages 静态发布', () => {
+test.describe('P0 根路径 GitHub Pages 静态发布', () => {
   test.beforeEach(async ({ page }) => {
     // 静态版不应该访问本机密钥网关，也绝不调用真实付费 API。
     await page.route('**/api/ai/**', route => route.fulfill({ status: 503, json: { error: { message: 'No gateway on Pages' } } }));
     await page.route('https://api.deepseek.com/**', route => route.abort());
   });
 
-  test('shows the P1 marker and honest key requirement, without advertising a built-in gateway', async ({ page }) => {
+  test('shows the P0 marker and honest key requirement, without advertising a built-in gateway', async ({ page }) => {
     await page.goto('./');
-    await expect(page).toHaveTitle(/P1/);
-    await expect(page.locator('#root')).toHaveAttribute('data-app-version', 'p1');
+    await expect(page).toHaveTitle(/P0.*课堂展示版/);
+    await expect(page.locator('#root')).toHaveAttribute('data-app-version', 'p0');
     await expect(page.getByTestId('static-hosting-notice')).toContainText('此网页不包含本机默认 Key');
-    await expect(page.getByTestId('static-hosting-notice').getByRole('link')).toHaveAttribute('href', '../');
+    await expect(page.getByTestId('static-hosting-notice').getByRole('link')).toHaveAttribute('href', './p1/');
     await expect(page.locator('#panel-ai-key-source')).toHaveValue('session');
     await expect(page.locator('#panel-ai-key-source option[value="server"]')).toBeDisabled();
     await expect(page.locator('#panel-ai-key')).toHaveValue('');

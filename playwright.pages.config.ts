@@ -2,11 +2,11 @@ import { defineConfig } from '@playwright/test';
 
 const port = Number(process.env.PLAYWRIGHT_PORT ?? '4186');
 const externalURL = process.env.PLAYWRIGHT_BASE_URL;
-const baseURL = externalURL ?? `http://127.0.0.1:${port}/chem-gemini/p1/`;
+const baseURL = externalURL ?? `http://127.0.0.1:${port}/chem-gemini/`;
 
 export default defineConfig({
   testDir: './tests',
-  testMatch: /(pages|learning-upgrade|microstructure)\.spec\.ts/,
+  testMatch: /(pages|learning-upgrade|microstructure|showcase)\.spec\.ts/,
   timeout: 30000,
   use: { baseURL, headless: true, screenshot: 'only-on-failure' },
   webServer: externalURL ? undefined : {

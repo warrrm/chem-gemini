@@ -8,8 +8,9 @@ import {
   IS_STATIC_HOSTING,
 } from './defaults';
 
-const SESSION_STORAGE_KEY = 'chem_gemini_p1_online_config_v2';
-const LEGACY_STORAGE_KEY = 'chem_gemini_p1_online_config_v1';
+// 两版在 Pages 上同源：当前版不得继承、迁移或删除 P1 的凭据和图像授权。
+const SESSION_STORAGE_KEY = 'chem_gemini_p0_online_config_v2';
+const LEGACY_STORAGE_KEY = 'chem_gemini_p0_online_config_v1';
 
 export interface AIProviderPresetSpec {
   id: AIProviderPresetId;

@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) => {
   const isPages = mode === 'pages';
   const gateway = createDeepSeekGateway({ apiKey: isPages ? '' : env.DEEPSEEK_API_KEY ?? '' });
   return {
-    base: isPages ? '/chem-gemini/p1/' : '/chem-gemini/',
+    base: '/chem-gemini/', // P0 一直使用项目根路径；Pages 仍然禁用本机网关。
     define: { 'import.meta.env.VITE_AI_DEPLOYMENT': JSON.stringify(isPages ? 'static' : 'local') },
     plugins: [react(), ...isPages ? [] : [{
       name: 'local-deepseek-gateway',
