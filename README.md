@@ -6,6 +6,12 @@
 
 **学习流程**：观察图片 → 确认名称 → 用质量比推导化学式 → 知识卡片 → 相关反应 → 随堂练习。首次及再次非空答错逐步开放化合价与微观图，答对后可回看全部线索。纯物质、溶液、混合物按不同口径表述。选择、实验、计算是三个平级题型，各自保存作答。标本封面是示意插画；教学正文与题目来自本地知识库，AI 整理、尚未经教师审校。
 
+## 第四步：物质知识卡片
+
+解锁后，卡片前部集中显示「常见用途」「制法与来源」「典型化学方程式」。49 个物质均有用途和制法或来源说明；天然标本、物理分离和溶液配制不强配生成反应。方程式从现有本地反应库按所选教材范围选录最多三条，生成示例与相应制法关联；对溶液或混合物注明反应的是溶质或主要成分。第五步继续提供反应筛选、实验现象和核心知识点。「制法与来源」只讲原理，不是操作指南。
+
+原理参考：[OpenStax 化学（代表性金属的来源与制备）](https://openstax.org/books/chemistry-2e/pages/18-2-occurrence-and-preparation-of-the-representative-metals)、[RSC 稀溶液中回收水的蒸馏示例](https://edu.rsc.org/experiments/recovering-water-from-copperii-sulfate-solution/1768.article)、[USGS 石灰石和大理岩辨识](https://pubs.usgs.gov/gip/acidrain/4.html)。参考资料不代表本卡片已经过教师人工审校。
+
 ## 运行与测试
 
 ```bash
@@ -20,4 +26,6 @@ npm run build:pages && npm run test:pages
 
 ## 发布与回退
 
-P0 展示版标签为 `v2.0.1-p0`（页首不再显示常驻提示，审校说明仍可从页脚查看），原 P0 保留在 `main`、`p0-stable`、`v1.0.0-p0`（`7915a15`）。本分支不部署单版本站点。推送并测试展示版源码后，在 [`p1-release` 的双版本流水线](https://github.com/warrrm/chem-gemini/blob/p1-release/.github/workflows/p1-pages.yml) 固定要发布的 P0 完整提交；发布包将 P0 放在根目录、P1 放在 `p1/`。上线后可核对 [发布清单](https://warrrm.github.io/chem-gemini/release-manifest.json)。旧版构建方式和回退说明见 [发布分支文档](https://github.com/warrrm/chem-gemini/blob/p1-release/docs/P1-发布说明.md)。
+本版标签为 `v2.1.0-p0`。改动前的课堂展示版 `v2.0.1-p0`（`d27bd8de07e0d2a6cfa1393d7e15b2324cd0ebbd`）和最初的 `v1.0.0-p0` 均保留，不需要移动标签或强推。
+
+本分支不单独部署；[`p1-release` 的双版本流水线](https://github.com/warrrm/chem-gemini/blob/p1-release/.github/workflows/p1-pages.yml) 固定 P0 标签和完整提交，把 P0 放在根目录、P1 放在 `p1/`。若要回退此次卡片改动，将工作流里的 `P0_TAG` 和 `P0_COMMIT` 恢复为上述 `v2.0.1-p0` 的值并重新发布。无需回退 P1 源码；可在 [发布清单](https://warrrm.github.io/chem-gemini/release-manifest.json) 核对两版。

@@ -1,3 +1,4 @@
+import { SUBSTANCE_PREPARATIONS } from '../src/data/preparations';
 import { ALL_QUIZZES, INQUIRY_QUESTIONS, MCQ_QUESTIONS } from '../src/data/quizzes';
 import { REACTIONS } from '../src/data/reactions';
 import { ALL_SUBSTANCES, SUBSTANCES, SUBSTANCE_BY_ID } from '../src/data/substances';
@@ -125,6 +126,32 @@ for (const rxn of REACTIONS) {
         fail(`Reaction [${rxn.id}] puts ↓ on non-precipitate product ${p.substanceId}`);
       }
     }
+  }
+}
+
+const reactionsById = new Map(REACTIONS.map(reaction => [reaction.id, reaction]));
+for (const id of Object.keys(SUBSTANCE_PREPARATIONS)) {
+  if (!SUBSTANCE_BY_ID.has(id)) fail(`制法说明引用未知物质 [${id}]`);
+}
+for (const sub of ALL_SUBSTANCES) {
+  if (!sub.uses.length || sub.uses.some(use => !use.trim())) fail(`物质 [${sub.id}] 缺少有效用途`);
+  const preparations = SUBSTANCE_PREPARATIONS[sub.id];
+  if (!preparations?.length || preparations.some(prep => !prep.text.trim())) {
+    fail(`物质 [${sub.id}] 缺少有效制法或来源`);
+    continue;
+  }
+  if (sub.kind === 'solution' && !preparations.some(prep => prep.kind === '配制')) {
+    fail(`溶液 [${sub.id}] 必须说明自身配制，不能以溶质的制法代替`);
+  }
+  const usedIds = new Set<string>();
+  for (const { productReactionId: id } of preparations) {
+    if (!id) continue;
+    const reaction = reactionsById.get(id);
+    if (sub.kind !== 'pure' || !reaction?.products.some(term => term.substanceId === sub.id)
+      || reaction.reactants.some(term => term.substanceId === sub.id) || usedIds.has(id)) {
+      fail(`物质 [${sub.id}] 关联了不生成该物质、未知或重复的制法反应 [${id}]`);
+    }
+    usedIds.add(id);
   }
 }
 

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { SUBSTANCE_BY_ID } from '../data/substances';
 import { formatFormulaPreview } from '../modules/formula/parser';
+import { getKnowledgeCardStudy } from '../modules/knowledge/cardStudy';
 import {
   getInquiriesForSubstance,
   getInquiryMatchKind,
@@ -16,14 +17,17 @@ import { CalculationQuestionCard } from './CalculationQuestionCard';
 /* ==================== Step 4: 物质知识卡片 ==================== */
 interface StepKnowledgeCardProps {
   substance: SubstanceEntry;
+  edition: TextbookEdition;
   onNextStep: () => void;
 }
 
 export const StepKnowledgeCard: React.FC<StepKnowledgeCardProps> = ({
   substance,
+  edition,
   onNextStep,
 }) => {
   const formulaDisplay = formatFormulaPreview(substance.formula);
+  const { preparations, equations, equationScope } = getKnowledgeCardStudy(substance, edition);
 
   return (
     <section className="card step-card" aria-labelledby="step4-title">
@@ -91,6 +95,51 @@ export const StepKnowledgeCard: React.FC<StepKnowledgeCardProps> = ({
       </div>
 
       <div className="knowledge-detail-list">
+        <div className="knowledge-study-grid">
+          <section className="detail-block" aria-labelledby="step4-uses">
+            <h3 id="step4-uses">常见用途</h3>
+            <ul className="uses-list">
+              {substance.uses.map(use => <li key={use}>{use}</li>)}
+            </ul>
+          </section>
+
+          <section className="detail-block" aria-labelledby="step4-preparation">
+            <h3 id="step4-preparation">制法与来源</h3>
+            {preparations.length > 0 ? (
+              <ul className="preparation-list" role="list">
+                {preparations.map(prep => (
+                  <li key={prep.text}>
+                    <span className="role-badge">{prep.kind}</span>
+                    <p>{prep.text}</p>
+                  </li>
+                ))}
+              </ul>
+            ) : <p>当前知识库暂无相关说明。</p>}
+            <p className="knowledge-section-note">仅介绍原理，不作为实验操作指南。</p>
+          </section>
+        </div>
+
+        <section className="detail-block knowledge-equations" aria-labelledby="step4-equations">
+          <h3 id="step4-equations">典型化学方程式</h3>
+          {equationScope && <p className="knowledge-section-note">{equationScope}</p>}
+          {equations.length > 0 ? (
+            <>
+              <p className="knowledge-section-note">选录「{edition}」范围内的反应，实验现象与知识点见第 5 步。</p>
+              <div className="knowledge-equation-list">
+                {equations.map(({ reaction, preparationKind }) => (
+                  <article key={reaction.id} className="knowledge-equation" data-reaction-id={reaction.id}>
+                    <div className="knowledge-equation-title">
+                      <h4>{reaction.name}</h4>
+                      <span className="role-badge">{preparationKind ?? reaction.roleLabel}</span>
+                    </div>
+                    <EquationDisplay rxn={reaction} />
+                  </article>
+                ))}
+              </div>
+            </>
+          ) : <p>「{edition}」范围内暂无匹配反应，可切换教材范围查看。</p>}
+        </section>
+
         <div className="detail-block">
           <h3>主要物理性质</h3>
           <p>{substance.physical}</p>
@@ -99,15 +148,6 @@ export const StepKnowledgeCard: React.FC<StepKnowledgeCardProps> = ({
         <div className="detail-block">
           <h3>主要化学性质</h3>
           <p>{substance.chemical}</p>
-        </div>
-
-        <div className="detail-block">
-          <h3>常见用途</h3>
-          <ul className="uses-list">
-            {substance.uses.map((u, idx) => (
-              <li key={idx}>{u}</li>
-            ))}
-          </ul>
         </div>
 
         <div className="detail-block is-concept">
@@ -130,48 +170,47 @@ export const StepKnowledgeCard: React.FC<StepKnowledgeCardProps> = ({
   );
 };
 
+// 两步共用同一方程式组件；卡片窄屏可按反应物、生成物分组换行。
+function EquationSide({ terms }: { terms: FormattedReaction['formattedReactants'] }) {
+  return (
+    <span className="eq-side">
+      {terms.map((term, index) => (
+        <span className="eq-piece" key={`${term.substanceId}-${index}`}>
+          {index > 0 && <span className="eq-plus">+</span>}
+          <span className="eq-term" title={term.name}>
+            {term.coef > 1 && <span className="eq-coef">{term.coef}</span>}
+            <span className="eq-formula">{term.formulaDisplay}</span>
+            {term.mark && <span className="eq-mark">{term.mark}</span>}
+          </span>
+        </span>
+      ))}
+    </span>
+  );
+}
+
+function EquationDisplay({ rxn }: { rxn: FormattedReaction }) {
+  const showCondition = rxn.condition && rxn.condition !== '常温';
+
+  return (
+    <div className="equation-scroll-box" role="math" aria-label={`化学方程式：${rxn.plainEquationText}`}>
+      <div className="equation-line">
+        <EquationSide terms={rxn.formattedReactants} />
+        <span className="eq-arrow-wrap">
+          {showCondition && <span className="eq-condition">{formatFormulaPreview(rxn.condition)}</span>}
+          <span className="eq-equals">═══</span>
+        </span>
+        <EquationSide terms={rxn.formattedProducts} />
+      </div>
+    </div>
+  );
+}
+
 /* ==================== Step 5: 相关反应方程式 ==================== */
 interface StepReactionsProps {
   substance: SubstanceEntry;
   edition: TextbookEdition;
   onNextStep: () => void;
 }
-
-const EquationDisplay: React.FC<{ rxn: FormattedReaction }> = ({ rxn }) => {
-  const showCondition = rxn.condition && rxn.condition !== '常温';
-
-  return (
-    <div className="equation-scroll-box" aria-label={`化学方程式：${rxn.plainEquationText}`}>
-      <div className="equation-line">
-        {rxn.formattedReactants.map((r, idx) => (
-          <React.Fragment key={`${r.substanceId}-${idx}`}>
-            {idx > 0 && <span className="eq-plus">+</span>}
-            <span className="eq-term" title={r.name}>
-              {r.coef > 1 && <span className="eq-coef">{r.coef}</span>}
-              <span className="eq-formula">{r.formulaDisplay}</span>
-            </span>
-          </React.Fragment>
-        ))}
-
-        <span className="eq-arrow-wrap">
-          {showCondition && <span className="eq-condition">{rxn.condition}</span>}
-          <span className="eq-equals">═══</span>
-        </span>
-
-        {rxn.formattedProducts.map((p, idx) => (
-          <React.Fragment key={`${p.substanceId}-${idx}`}>
-            {idx > 0 && <span className="eq-plus">+</span>}
-            <span className="eq-term" title={p.name}>
-              {p.coef > 1 && <span className="eq-coef">{p.coef}</span>}
-              <span className="eq-formula">{p.formulaDisplay}</span>
-              {p.mark && <span className="eq-mark">{p.mark}</span>}
-            </span>
-          </React.Fragment>
-        ))}
-      </div>
-    </div>
-  );
-};
 
 export const StepReactions: React.FC<StepReactionsProps> = ({
   substance,

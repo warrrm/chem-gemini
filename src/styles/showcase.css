@@ -137,6 +137,24 @@ a { color: var(--primary); }
 .clue-progress-note, .micro-note, .inquiry-scope-note { line-height: 1.75; }
 .clue-panel, .reaction-item-card, .detail-block:not(.is-concept) { background: #fffefa; }
 .mass-ratio-card, .knowledge-kv, .inquiry-header-card { background: #f1f4ed; }
+.knowledge-study-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 275px), 1fr)); gap: 12px; }
+.knowledge-study-grid .detail-block, .knowledge-equations { min-width: 0; }
+.knowledge-study-grid .uses-list li + li { margin-top: 4px; }
+.preparation-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.preparation-list .role-badge { display: inline-block; margin-bottom: 3px; }
+.detail-block p.knowledge-section-note { font-size: 13px; color: var(--text-sub); }
+.knowledge-section-note:not(:first-child) { margin-top: 6px; }
+.knowledge-equation-list { display: grid; gap: 10px; margin-top: 10px; }
+.knowledge-equation { min-width: 0; padding: 10px 12px; background: #f1f4ed; border-radius: var(--radius-sm); }
+.knowledge-equation-title { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-bottom: 6px; }
+.knowledge-equation-title h4 { margin: 0; font-size: 15px; }
+.knowledge-equation .equation-scroll-box { margin: 0; padding: 8px 10px; }
+.eq-side, .eq-piece { display: contents; }
+.knowledge-equation :is(.equation-line, .eq-side) { display: flex; flex-wrap: wrap; align-items: center; gap: 5px .4em; }
+.knowledge-equation .eq-side { min-width: 0; }
+.knowledge-equation .eq-piece { display: inline-flex; align-items: baseline; gap: .4em; }
+.app-shell.is-projector-large :is(.knowledge-study-grid h3, .knowledge-equations h3, .knowledge-equation-title h4) { font-size: 20px; }
+.app-shell.is-projector-large .knowledge-equation .eq-condition { font-size: 16px; }
 .quiz-stem, .target-instruction { font-size: 18px; }
 .knowledge-grid, .candidate-btn-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); }
 .equation-scroll-box { max-width: 100%; }

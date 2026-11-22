@@ -235,7 +235,7 @@ export const AUX_SUBSTANCES: SubstanceEntry[] = [
     ],
     physical: '蓝色絮状固体，难溶于水。',
     chemical: '能与酸反应溶解，受热分解为氧化铜和水。',
-    uses: ['特征蓝色沉淀产物'],
+    uses: ['教学中用于说明铜离子的特征沉淀', '部分农用杀菌剂的有效成分'],
     conceptNotes: '氢氧化铜难溶于水，不能使酚酞变红。',
   }),
   auxSub({
@@ -279,7 +279,7 @@ export const AUX_SUBSTANCES: SubstanceEntry[] = [
     ],
     physical: '墨绿色固体，溶于水呈深绿色。',
     chemical: '高锰酸钾受热分解生成锰酸钾、二氧化锰和氧气。',
-    uses: ['制氧实验残留固体成分之一'],
+    uses: ['工业生产高锰酸钾的中间体'],
     conceptNotes: '注意区分高锰酸钾与锰酸钾的钾原子个数。',
   }),
   auxSub({

@@ -33,7 +33,7 @@ test.describe('化学识物小课堂 — 5 大必测验收场景 (Section 11)', 
     await page.locator('#formula-input').fill('HCl');
     await page.getByRole('button', { name: '提交校验并解锁' }).click();
 
-    await expect(page.getByRole('heading', { name: '稀盐酸' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: '稀盐酸', level: 2, exact: true })).toBeVisible();
     await expect(page.getByTestId('unlocked-formula-value')).toHaveText('HCl');
 
     await page.getByRole('button', { name: /下一步：查看相关化学反应方程式/ }).click();

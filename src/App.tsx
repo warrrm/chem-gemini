@@ -779,6 +779,7 @@ export const App: React.FC = () => {
               {state.currentStep === 4 && confirmedSubstance && isFormulaUnlocked && (
                 <StepKnowledgeCard
                   substance={confirmedSubstance}
+                  edition={state.edition}
                   onNextStep={() => dispatch({ type: 'NAVIGATE_STEP', step: 5 })}
                 />
               )}
