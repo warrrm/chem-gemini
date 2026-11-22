@@ -14,8 +14,8 @@ concurrency:
 
 env:
   # Tag for the manifest, full commit for verifying the source before it can run.
-  P0_TAG: v2.0.1-p0
-  P0_COMMIT: d27bd8de07e0d2a6cfa1393d7e15b2324cd0ebbd
+  P0_TAG: v2.1.0-p0
+  P0_COMMIT: 03eb86a18d27e28fbb1164b286fd75f61696109e
 
 jobs:
   build-and-test:

@@ -2,7 +2,7 @@
 
 - **P1 最终网页**：<https://warrrm.github.io/chem-gemini/p1/>
 - **P1 独立分支**：[`p1-release`](https://github.com/warrrm/chem-gemini/tree/p1-release)
-- **P0 课堂展示版**：<https://warrrm.github.io/chem-gemini/>（[`p0-showcase`](https://github.com/warrrm/chem-gemini/tree/p0-showcase) / `v2.0.1-p0`）；旧版源码仍在 `p0-stable` / `v1.0.0-p0`。
+- **P0 课堂展示版**：<https://warrrm.github.io/chem-gemini/>（[`p0-showcase`](https://github.com/warrrm/chem-gemini/tree/p0-showcase) / `v2.1.0-p0`，可回退到 `v2.0.1-p0`）；旧版源码仍在 `p0-stable` / `v1.0.0-p0`。
 - [P1 发布与版本隔离说明](docs/P1-发布说明.md)
 
 > **从一张照片，认识一种物质** —— 面向初中学生的互动式化学学习与教师课堂演示网站。
