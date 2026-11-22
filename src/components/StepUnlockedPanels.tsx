@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useId, useMemo, useState } from 'react';
 import { SUBSTANCE_BY_ID } from '../data/substances';
 import { formatFormulaPreview } from '../modules/formula/parser';
 import { getKnowledgeCardStudy } from '../modules/knowledge/cardStudy';
@@ -19,6 +19,32 @@ interface StepKnowledgeCardProps {
   substance: SubstanceEntry;
   edition: TextbookEdition;
   onNextStep: () => void;
+}
+
+function KnowledgeDisclosure({ title, children }: { title: string; children: React.ReactNode }) {
+  const id = useId();
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div className="detail-block knowledge-disclosure">
+      <h3>
+        <button
+          type="button"
+          className="knowledge-disclosure-toggle"
+          id={`${id}-toggle`}
+          aria-expanded={expanded}
+          aria-controls={`${id}-content`}
+          onClick={() => setExpanded(value => !value)}
+        >
+          {title}
+          <span className="knowledge-disclosure-action" aria-hidden="true">{expanded ? '收起' : '展开'}</span>
+        </button>
+      </h3>
+      <div className="knowledge-disclosure-body" id={`${id}-content`} role="region" aria-labelledby={`${id}-toggle`} hidden={!expanded}>
+        {children}
+      </div>
+    </div>
+  );
 }
 
 export const StepKnowledgeCard: React.FC<StepKnowledgeCardProps> = ({
@@ -94,33 +120,36 @@ export const StepKnowledgeCard: React.FC<StepKnowledgeCardProps> = ({
         </div>
       </div>
 
-      <div className="knowledge-detail-list">
-        <div className="knowledge-study-grid">
-          <section className="detail-block" aria-labelledby="step4-uses">
-            <h3 id="step4-uses">常见用途</h3>
-            <ul className="uses-list">
-              {substance.uses.map(use => <li key={use}>{use}</li>)}
+      <div className="knowledge-detail-list" key={substance.id}>
+        <KnowledgeDisclosure title="主要物理性质">
+          <p>{substance.physical}</p>
+        </KnowledgeDisclosure>
+
+        <KnowledgeDisclosure title="主要化学性质">
+          <p>{substance.chemical}</p>
+        </KnowledgeDisclosure>
+
+        <KnowledgeDisclosure title="常见用途">
+          <ul className="uses-list">
+            {substance.uses.map(use => <li key={use}>{use}</li>)}
+          </ul>
+        </KnowledgeDisclosure>
+
+        <KnowledgeDisclosure title="制法与来源">
+          {preparations.length > 0 ? (
+            <ul className="preparation-list" role="list">
+              {preparations.map(prep => (
+                <li key={prep.text}>
+                  <span className="role-badge">{prep.kind}</span>
+                  <p>{prep.text}</p>
+                </li>
+              ))}
             </ul>
-          </section>
+          ) : <p>当前知识库暂无相关说明。</p>}
+          <p className="knowledge-section-note">仅介绍原理，不作为实验操作指南。</p>
+        </KnowledgeDisclosure>
 
-          <section className="detail-block" aria-labelledby="step4-preparation">
-            <h3 id="step4-preparation">制法与来源</h3>
-            {preparations.length > 0 ? (
-              <ul className="preparation-list" role="list">
-                {preparations.map(prep => (
-                  <li key={prep.text}>
-                    <span className="role-badge">{prep.kind}</span>
-                    <p>{prep.text}</p>
-                  </li>
-                ))}
-              </ul>
-            ) : <p>当前知识库暂无相关说明。</p>}
-            <p className="knowledge-section-note">仅介绍原理，不作为实验操作指南。</p>
-          </section>
-        </div>
-
-        <section className="detail-block knowledge-equations" aria-labelledby="step4-equations">
-          <h3 id="step4-equations">典型化学方程式</h3>
+        <KnowledgeDisclosure title="典型化学方程式">
           {equationScope && <p className="knowledge-section-note">{equationScope}</p>}
           {equations.length > 0 ? (
             <>
@@ -138,17 +167,7 @@ export const StepKnowledgeCard: React.FC<StepKnowledgeCardProps> = ({
               </div>
             </>
           ) : <p>「{edition}」范围内暂无匹配反应，可切换教材范围查看。</p>}
-        </section>
-
-        <div className="detail-block">
-          <h3>主要物理性质</h3>
-          <p>{substance.physical}</p>
-        </div>
-
-        <div className="detail-block">
-          <h3>主要化学性质</h3>
-          <p>{substance.chemical}</p>
-        </div>
+        </KnowledgeDisclosure>
 
         <div className="detail-block is-concept">
           <h3>核心概念辨析</h3>
